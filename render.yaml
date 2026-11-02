@@ -1,19 +1,15 @@
-# The Entitled backend on Render. The frontend goes on Vercel: see DEPLOYMENT.md.
+# The Entitled backend on Render's free plan. The frontend goes on Vercel: see DEPLOYMENT.md.
+# Free has no disk, so every restart returns to fresh demo data.
 services:
   - type: web
     name: entitled-backend
     runtime: docker
-    # Smaller plans are too slow: reading a document took 145 s on half a CPU, and Vercel gives up at 120 s.
-    plan: 1c-2g
+    plan: free
     region: singapore
     dockerfilePath: ./backend/Dockerfile
     dockerContext: .
     healthCheckPath: /api/health
     numInstances: 1
-    disk:
-      name: entitled-data
-      mountPath: /data
-      sizeGB: 1
     envVars:
       - key: CONFIRMATION_SECRET
         generateValue: true

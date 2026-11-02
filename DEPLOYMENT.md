@@ -80,10 +80,16 @@ The backend goes on Render and the frontend on Vercel. **Deploy the backend firs
 
 ### Backend on Render
 
-Render's free plan won't work: it has no disk and only 0.1 CPU, and Vercel gives up on a request after 120 s. [`render.yaml`](render.yaml) asks for 1 CPU, 2 GB and a 1 GB disk, about $25.25 a month by Render's published rates. Render shows the exact price before you confirm.
+[`render.yaml`](render.yaml) uses Render's [free plan](https://render.com/docs/free). It costs nothing, but has limits:
+
+- **It sleeps.** After 15 minutes without visitors it stops, and the next visitor waits about a minute. Reminders and status checks don't run while it sleeps.
+- **Data doesn't last.** There is no disk, so a restart, redeploy or sleep returns to fresh demo data.
+- **It's slow.** It has 0.1 CPU and 512 MB. Reading a document took 145 s on 0.5 CPU, so expect document reading to fail on free, because Vercel gives up on a request after 120 s. Form filling runs a real browser and may fail too.
+
+For reliable document reading, change `plan` to `1c-2g` and add a disk mounted at `/data`.
 
 1. Open <https://render.com/deploy?repo=https://github.com/harshisingh777/entitled> and sign in.
-2. Review the plan and price, then apply the Blueprint. The first build takes several minutes.
+2. Apply the Blueprint. The first build takes several minutes.
 3. Copy the service's URL and check it:
 
 ```bash

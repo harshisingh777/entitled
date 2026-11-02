@@ -29,7 +29,7 @@ PORT = int(os.environ.get("BACKEND_PORT", "8000"))
 INTERNAL_BASE_URL = os.environ.get("INTERNAL_BASE_URL", f"http://127.0.0.1:{PORT}")
 POLL_SECONDS = int(os.environ.get("STATUS_POLL_SECONDS", "60"))
 CONFIRMATION_TTL_SECONDS = 600
-OCR_THREADS = int(os.environ.get("OCR_THREADS", "0"))
+OCR_LOW_MEMORY = os.environ.get("OCR_LOW_MEMORY", "") == "1"
 
 SARVAM_API_KEY = os.environ.get("SARVAM_API_KEY", "")
 SARVAM_BASE_URL = os.environ.get("SARVAM_BASE_URL", "https://api.sarvam.ai")

@@ -5,6 +5,7 @@ Aadhaar numbers are reduced to their last four digits before they leave this mod
 """
 import io
 import json
+import os
 import re
 import subprocess
 import sys
@@ -25,16 +26,28 @@ READ_TIMEOUT_SECONDS = 110
 def _rapidocr_rows(data: bytes) -> list[str]:
     with heavy_job:
         process = subprocess.run([sys.executable, "-m", "app.ocr"], input=data, capture_output=True,
-                                 cwd=str(config.BACKEND), timeout=READ_TIMEOUT_SECONDS)
+                                 cwd=str(config.BACKEND), timeout=READ_TIMEOUT_SECONDS, env=_read_env())
     if process.returncode != 0:
         raise RuntimeError(process.stderr.decode("utf-8", "replace")[-600:])
     return json.loads(process.stdout.decode("utf-8"))
 
 
+def _read_env() -> dict:
+    if not config.OCR_LOW_MEMORY:
+        return dict(os.environ)
+    # Libraries start one thread per core they can see, which on a shared host is far more than this server's share.
+    return {**os.environ, "OMP_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "MALLOC_ARENA_MAX": "1"}
+
+
 def _read_in_this_process(data: bytes) -> list[str]:
     from rapidocr_onnxruntime import RapidOCR
-    threads = {"intra_op_num_threads": config.OCR_THREADS, "inter_op_num_threads": config.OCR_THREADS} if config.OCR_THREADS else {}
-    result, _ = RapidOCR(**threads)(data)
+    settings = {}
+    if config.OCR_LOW_MEMORY:
+        import cv2
+        cv2.setNumThreads(1)
+        settings = {"intra_op_num_threads": 1, "inter_op_num_threads": 1, "use_cls": False, "rec_batch_num": 1,
+                    "det_limit_side_len": 736, "det_limit_type": "max"}
+    result, _ = RapidOCR(**settings)(data)
     if not result:
         return []
     boxes = []

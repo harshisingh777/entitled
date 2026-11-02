@@ -1,4 +1,4 @@
-export type Text2 = { hi: string; en: string };
+export type Text2 = { en: string };
 export type Outcome = "eligible" | "not_eligible" | "near_miss" | "undecided";
 
 export type TraceItem = { id: string; status: "pass" | "fail" | "unknown"; label: Text2; reason?: Text2 };
@@ -20,8 +20,8 @@ export type Application = {
   next_action: Text2 | null; due_at: string | null; overdue: boolean; days_since_submission: number | null;
   events: { status: string; label: Text2; at: string }[];
 };
-export type Message = { id: number; role: "user" | "agent"; hi: string; en: string; kind: string; at: string };
-export type Notice = { id: number; kind: string; hi: string; en: string; delivery: string; at: string };
+export type Message = { id: number; role: "user" | "agent"; en: string; kind: string; at: string };
+export type Notice = { id: number; kind: string; en: string; delivery: string; at: string };
 export type Fact = { key: string; value: string | number | boolean; source: string; confidence: number; label: Text2 };
 export type HouseholdState = {
   household: {

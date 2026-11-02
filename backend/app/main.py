@@ -95,7 +95,7 @@ class StartForm(BaseModel):
 
 class Speak(BaseModel):
     text: str = Field(min_length=1, max_length=2500)
-    language: str = "hi-IN"
+    language: str = "en-IN"
 
 
 class Advance(BaseModel):

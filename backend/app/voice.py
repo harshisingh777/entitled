@@ -24,7 +24,7 @@ def _sarvam_stt(audio: bytes, filename: str, content_type: str) -> str:
         f"{config.SARVAM_BASE_URL}/speech-to-text",
         headers={"api-subscription-key": config.SARVAM_API_KEY},
         files={"file": (filename, audio, content_type)},
-        data={"model": config.SARVAM_STT_MODEL, "language_code": "unknown"},
+        data={"model": config.SARVAM_STT_MODEL, "language_code": "en-IN"},
         timeout=30,
     )
     response.raise_for_status()
@@ -55,13 +55,13 @@ def _bhashini(task: dict, input_data: dict) -> dict:
 
 
 def _bhashini_stt(audio: bytes) -> str:
-    task = {"taskType": "asr", "config": {"language": {"sourceLanguage": "hi"}}}
+    task = {"taskType": "asr", "config": {"language": {"sourceLanguage": "en"}}}
     result = _bhashini(task, {"audio": [{"audioContent": base64.b64encode(audio).decode()}]})
     return result["output"][0]["transcript"]
 
 
 def _bhashini_tts(text: str) -> tuple[str, str]:
-    task = {"taskType": "tts", "config": {"language": {"sourceLanguage": "hi"}, "gender": "female"}}
+    task = {"taskType": "tts", "config": {"language": {"sourceLanguage": "en"}, "gender": "female"}}
     result = _bhashini(task, {"input": [{"source": text}]})
     return result["audio"][0]["audioContent"], "audio/wav"
 
@@ -81,14 +81,14 @@ def transcribe(audio: bytes, filename: str, content_type: str) -> tuple[str, str
     raise NoVoiceProvider("; ".join(errors) or "No speech provider configured")
 
 
-def synthesize(text: str, language: str = "hi-IN") -> tuple[str, str, str]:
+def synthesize(text: str, language: str = "en-IN") -> tuple[str, str, str]:
     errors = []
     if config.SARVAM_API_KEY:
         try:
             return (*_sarvam_tts(text, language), "sarvam")
         except (httpx.HTTPError, KeyError, IndexError) as exc:
             errors.append(f"sarvam: {exc}")
-    if config.BHASHINI_API_KEY and config.BHASHINI_USER_ID and language.startswith("hi"):
+    if config.BHASHINI_API_KEY and config.BHASHINI_USER_ID:
         try:
             return (*_bhashini_tts(text), "bhashini")
         except (httpx.HTTPError, KeyError, IndexError) as exc:

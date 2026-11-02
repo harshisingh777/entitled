@@ -15,10 +15,12 @@ function recognitionCtor(): RecognitionCtor | null {
   return w.SpeechRecognition || w.webkitSpeechRecognition || null;
 }
 
+const LANGUAGE = "en-IN";
+
 export type ListenState = "idle" | "listening" | "transcribing";
 
 /** Sarvam or Bhashini when the server has keys, otherwise whatever speech the browser offers. */
-export function useVoice(config: ClientConfig | null, lang: "hi" | "en", onText: (text: string) => void, onError: (code: string) => void) {
+export function useVoice(config: ClientConfig | null, onText: (text: string) => void, onError: (code: string) => void) {
   const [state, setState] = useState<ListenState>("idle");
   const [supported, setSupported] = useState(true);
   const stopRef = useRef<(() => void) | null>(null);
@@ -34,7 +36,7 @@ export function useVoice(config: ClientConfig | null, lang: "hi" | "en", onText:
     const Ctor = recognitionCtor();
     if (!Ctor) return onError("unsupported");
     const recognition = new Ctor();
-    recognition.lang = lang === "hi" ? "hi-IN" : "en-IN";
+    recognition.lang = LANGUAGE;
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
     recognition.onresult = (event) => {
@@ -46,7 +48,7 @@ export function useVoice(config: ClientConfig | null, lang: "hi" | "en", onText:
     stopRef.current = () => recognition.stop();
     setState("listening");
     recognition.start();
-  }, [lang, onError, onText]);
+  }, [onError, onText]);
 
   const listenOnServer = useCallback(async () => {
     let stream: MediaStream;
@@ -91,23 +93,22 @@ export function useVoice(config: ClientConfig | null, lang: "hi" | "en", onText:
     }
   }, [listenInBrowser, listenOnServer, serverMode, state]);
 
-  const speakInBrowser = useCallback((text: string, language: string) => {
+  const speakInBrowser = useCallback((text: string) => {
     const synth = window.speechSynthesis;
     if (!synth) return;
     synth.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = language;
-    const voice = synth.getVoices().find((v) => v.lang === language) || synth.getVoices().find((v) => v.lang.startsWith(language.slice(0, 2)));
+    utterance.lang = LANGUAGE;
+    const voice = synth.getVoices().find((v) => v.lang === LANGUAGE) || synth.getVoices().find((v) => v.lang.startsWith("en"));
     if (voice) utterance.voice = voice;
     synth.speak(utterance);
   }, []);
 
-  const speak = useCallback(async (text: string, lang: "hi" | "en") => {
-    const language = lang === "hi" ? "hi-IN" : "en-IN";
-    if (!serverMode) return speakInBrowser(text, language);
+  const speak = useCallback(async (text: string) => {
+    if (!serverMode) return speakInBrowser(text);
     try {
       const response = await fetch("/api/voice/tts", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, language }),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, language: LANGUAGE }),
       });
       if (!response.ok) throw new Error(String(response.status));
       const { audio, mime } = await response.json();
@@ -115,7 +116,7 @@ export function useVoice(config: ClientConfig | null, lang: "hi" | "en", onText:
       audioRef.current = new Audio(`data:${mime};base64,${audio}`);
       await audioRef.current.play();
     } catch {
-      speakInBrowser(text, language);
+      speakInBrowser(text);
     }
   }, [serverMode, speakInBrowser]);
 

@@ -46,8 +46,7 @@ def receive_submission(scheme_id: str, application_id: str, digest: str, token: 
 
 
 _STYLE = """
-@font-face{font-family:'Noto Sans Devanagari';src:url('/static/fonts/noto-sans-devanagari.woff2') format('woff2');font-weight:400 700}
-*{box-sizing:border-box}body{margin:0;background:#eef0f3;color:#1a1f2b;font:15px/1.5 Arial,'Noto Sans Devanagari','Nirmala UI',sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#eef0f3;color:#1a1f2b;font:15px/1.5 Arial,sans-serif}
 .banner{background:#7a2e0e;color:#fff;padding:8px 16px;font-weight:600;text-align:center}
 header{background:#22375a;color:#fff;padding:14px 20px}header h1{margin:0;font-size:19px}header p{margin:2px 0 0;font-size:13px;opacity:.85}
 main{max-width:760px;margin:16px auto;background:#fff;border:1px solid #c7ccd6;padding:20px}

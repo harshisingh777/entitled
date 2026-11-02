@@ -6,7 +6,7 @@ A voice agent that finds every government scheme a family is entitled to, proves
 
 Schemes are not charity. They are a citizen's right, and Entitled closes the gap between being entitled and actually receiving. Built for PS-01, Scheme Saathi. The full brief is in [detail.md](detail.md).
 
-The website is in English by default, with a one-tap switch to Hindi. The agent understands English, Hindi and romanised Hindi, including mixes of them.
+The website and the agent's replies and speech are in English. The agent can still understand Hindi and romanised Hindi if someone types them, but it always answers in English.
 
 ## Run it
 
@@ -61,7 +61,7 @@ python -m pytest tests            # 77 tests, including a real browser and real 
 python scripts/ui_check.py        # with both servers running
 ```
 
-`ui_check.py` drives the whole journey by tapping on a phone-sized screen, then checks every screen at 320, 390, 768, 844, 1024, 1366 and 1920 px for sideways scrolling, clipped elements, small tap targets, console errors and stray Hindi on the English site.
+`ui_check.py` drives the whole journey by tapping on a phone-sized screen, then checks every screen at 320, 390, 768, 844, 1024, 1366 and 1920 px for sideways scrolling, clipped elements, small tap targets, console errors and any Hindi text on screen.
 
 ## How it is built
 
@@ -100,6 +100,7 @@ Copy `.env.example` to `.env` to add keys. **The Sarvam, Bhashini, Twilio and LL
 
 - **`panzi-json-logic` instead of `json-logic-py`.** The latter crashes on Python 3.
 - **`sarvam-105b` as the default model.** Sarvam's current docs do not list `sarvam-30b`. Change it with `LLM_MODEL`.
+- **English instead of Hindi-first.** The site, replies and speech are English only, at the project owner's request. Hindi text is still in the backend's rule files and replies, and the extractor still reads Hindi, but the website shows none of it.
 - **RapidOCR instead of Tesseract** as the local fallback, because it installs without a system binary. It reads Latin script only, so Hindi documents need Sarvam Vision.
 - **SQLite by default.** Set `DATABASE_URL` and add a driver for PostgreSQL. This path has not been tested.
 

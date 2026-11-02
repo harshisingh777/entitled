@@ -22,9 +22,11 @@ console_errors: list[str] = []
 
 
 def check_layout(page: Page, where: str) -> None:
+    if page.get_by_role("button", name="Hindi").count():
+        problems.append(f"{where}: a Hindi switch is still on the page")
     hindi = page.evaluate(r"""(document.body.innerText + ' ' + [...document.querySelectorAll('[aria-label]')].map(e => e.getAttribute('aria-label')).join(' ')).match(/[\u0900-\u097F]+/)""")
     if hindi:
-        problems.append(f"{where}: Hindi on the English site: {hindi[0]}")
+        problems.append(f"{where}: Hindi text on screen: {hindi[0]}")
     overflow = page.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth")
     if overflow > 0:
         problems.append(f"{where}: page scrolls sideways by {overflow}px")

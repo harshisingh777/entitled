@@ -6,7 +6,6 @@ import "@fontsource/mukta/600.css";
 import "@fontsource/mukta/700.css";
 import "@fontsource/tiro-devanagari-hindi/400.css";
 import "./globals.css";
-import { LangProvider } from "@/lib/lang";
 import ServiceWorker from "@/components/ServiceWorker";
 
 export const metadata: Metadata = {
@@ -28,7 +27,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <LangProvider>{children}</LangProvider>
+        {children}
         <ServiceWorker />
       </body>
     </html>

@@ -13,3 +13,5 @@ services:
     envVars:
       - key: CONFIRMATION_SECRET
         generateValue: true
+      - key: OCR_THREADS
+        value: "1"

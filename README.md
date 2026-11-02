@@ -59,7 +59,7 @@ The labels were written by hand from the rule definitions, so they catch encodin
 
 ```bash
 cd backend
-python -m pytest tests            # 78 tests, including a real browser and real OCR run
+python -m pytest tests            # 80 tests, including a real browser and real OCR run
 python scripts/ui_check.py        # with both servers running
 ```
 

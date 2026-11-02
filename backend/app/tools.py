@@ -142,10 +142,11 @@ def _sync_fields(app: Application, household: Household) -> bool:
 
 
 def _agent_process(job: dict) -> dict:
-    process = subprocess.run(
-        [sys.executable, "-m", "app.form_agent"], input=json.dumps(job, ensure_ascii=False).encode("utf-8"),
-        capture_output=True, cwd=str(config.BACKEND), timeout=120,
-    )
+    with ocr.heavy_job:
+        process = subprocess.run(
+            [sys.executable, "-m", "app.form_agent"], input=json.dumps(job, ensure_ascii=False).encode("utf-8"),
+            capture_output=True, cwd=str(config.BACKEND), timeout=120,
+        )
     if process.returncode != 0:
         raise RuntimeError(process.stderr.decode("utf-8", "replace")[-600:])
     return json.loads(process.stdout.decode("utf-8"))

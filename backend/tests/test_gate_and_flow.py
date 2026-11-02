@@ -1,4 +1,5 @@
 """The API with the browser agent stubbed. test_e2e.py runs the same journey with the real one."""
+import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -198,6 +199,25 @@ def test_ocr_fills_profile_and_never_keeps_full_aadhaar(client):
     assert facts["name"]["value"] == "Kamla Devi"
     assert facts["name"]["source"] == "document"
     assert "9999" not in response.text and "8888" not in response.text
+
+
+def test_reading_a_document_leaves_no_model_in_the_server(client):
+    household_id = client.post("/api/households", json={}).json()["household"]["id"]
+    with open(SAMPLES / "aadhaar.jpg", "rb") as image:
+        response = client.post(f"/api/households/{household_id}/ocr", files={"file": ("aadhaar.jpg", image, "image/jpeg")})
+    assert response.json()["extracted"]["doc_type"] == "aadhaar"
+    assert "rapidocr_onnxruntime" not in sys.modules
+
+
+def test_a_failed_read_asks_for_another_photo(client, monkeypatch):
+    household_id = client.post("/api/households", json={}).json()["household"]["id"]
+
+    def crash(data):
+        raise RuntimeError("out of memory")
+    monkeypatch.setattr(tools.ocr, "_rapidocr_rows", crash)
+    response = client.post(f"/api/households/{household_id}/ocr", files={"file": ("photo.jpg", b"image", "image/jpeg")})
+    assert response.status_code == 200
+    assert "another photo" in response.json()["reply"]["en"]
 
 
 def test_documents_read_at_the_same_time_all_save(client, monkeypatch):

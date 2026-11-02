@@ -4,7 +4,11 @@ The image is only ever held in memory, so there is nothing to delete after extra
 Aadhaar numbers are reduced to their last four digits before they leave this module.
 """
 import io
+import json
 import re
+import subprocess
+import sys
+import threading
 import time
 import zipfile
 
@@ -12,15 +16,25 @@ import httpx
 
 from . import config
 
-_engine = None
+# Reading and the browser agent are the two jobs that need real memory. They run one at a time, each in a
+# process that ends with the job, so a small server gets everything back and the model never stays loaded.
+heavy_job = threading.Lock()
+READ_TIMEOUT_SECONDS = 110
 
 
 def _rapidocr_rows(data: bytes) -> list[str]:
-    global _engine
-    if _engine is None:
-        from rapidocr_onnxruntime import RapidOCR
-        _engine = RapidOCR()
-    result, _ = _engine(data)
+    with heavy_job:
+        process = subprocess.run([sys.executable, "-m", "app.ocr"], input=data, capture_output=True,
+                                 cwd=str(config.BACKEND), timeout=READ_TIMEOUT_SECONDS)
+    if process.returncode != 0:
+        raise RuntimeError(process.stderr.decode("utf-8", "replace")[-600:])
+    return json.loads(process.stdout.decode("utf-8"))
+
+
+def _read_in_this_process(data: bytes) -> list[str]:
+    from rapidocr_onnxruntime import RapidOCR
+    threads = {"intra_op_num_threads": config.OCR_THREADS, "inter_op_num_threads": config.OCR_THREADS} if config.OCR_THREADS else {}
+    result, _ = RapidOCR(**threads)(data)
     if not result:
         return []
     boxes = []
@@ -67,7 +81,11 @@ def read_rows(data: bytes, filename: str = "document.jpg") -> tuple[list[str], s
             return _sarvam_rows(data, filename), "sarvam_vision"
         except Exception:  # A network or quota failure must not stop the flow, the local reader takes over.
             pass
-    return _rapidocr_rows(data), "rapidocr"
+    try:
+        return _rapidocr_rows(data), "rapidocr"
+    except (RuntimeError, subprocess.TimeoutExpired) as exc:  # The person is asked for another photo instead.
+        print(f"Document reading failed: {type(exc).__name__}: {exc}"[:800], file=sys.stderr)
+        return [], "rapidocr"
 
 
 _LABELS = {
@@ -160,3 +178,8 @@ def read_document(data: bytes, filename: str = "document.jpg") -> dict:
     parsed = parse_rows(rows)
     parsed["engine"] = engine
     return parsed
+
+
+if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")
+    print(json.dumps(_read_in_this_process(sys.stdin.buffer.read()), ensure_ascii=False))

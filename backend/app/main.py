@@ -1,5 +1,6 @@
 """HTTP API for the Entitled PWA, plus the mock portal."""
 import base64
+import os
 import time
 from contextlib import asynccontextmanager
 
@@ -112,6 +113,7 @@ def client_config():
     return {
         "voice": voice.providers(), "llm": llm.available(), "ocr": "sarvam_vision" if config.SARVAM_API_KEY else "rapidocr",
         "sms": "twilio" if config.TWILIO_ACCOUNT_SID else "simulated", "schemes": len(load_schemes()),
+        "commit": os.environ.get("RENDER_GIT_COMMIT", "")[:7],
     }
 
 

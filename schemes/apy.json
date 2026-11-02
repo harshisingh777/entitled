@@ -1,0 +1,122 @@
+{
+  "id": "apy",
+  "level": "central",
+  "name": {
+    "hi": "अटल पेंशन योजना",
+    "en": "Atal Pension Yojana"
+  },
+  "aliases": [
+    "अटल",
+    "atal",
+    "apy"
+  ],
+  "benefit": {
+    "hi": "60 के बाद ₹1,000 से ₹5,000 महीना (अंशदान देना होता है)",
+    "en": "₹1,000 to ₹5,000 a month after 60 (needs contributions)"
+  },
+  "beneficiary": {
+    "hi": "आवेदक",
+    "en": "The applicant"
+  },
+  "criteria": [
+    {
+      "id": "age_min_18",
+      "logic": {
+        ">=": [
+          {
+            "var": "age"
+          },
+          18
+        ]
+      },
+      "label": {
+        "hi": "उम्र 18+",
+        "en": "Age 18+"
+      },
+      "fail": {
+        "hi": "उम्र {age} है, कम से कम 18 चाहिए",
+        "en": "Age is {age}, must be at least 18"
+      }
+    },
+    {
+      "id": "age_max_40",
+      "logic": {
+        "<=": [
+          {
+            "var": "age"
+          },
+          40
+        ]
+      },
+      "label": {
+        "hi": "उम्र 40 तक",
+        "en": "Age up to 40"
+      },
+      "fail": {
+        "hi": "उम्र {age} है, 40 तक ही मान्य",
+        "en": "Age is {age}, limit is 40"
+      }
+    },
+    {
+      "id": "bank",
+      "logic": {
+        "==": [
+          {
+            "var": "has_bank_account"
+          },
+          true
+        ]
+      },
+      "label": {
+        "hi": "बैंक खाता",
+        "en": "Bank account"
+      },
+      "fail": {
+        "hi": "बैंक खाता नहीं है",
+        "en": "No bank account"
+      },
+      "gap": {
+        "kind": "action",
+        "hi": "जन धन खाता खुलवा लें, फिर {scheme} मिल सकती है",
+        "en": "Open a Jan Dhan account, then {scheme} is possible"
+      }
+    },
+    {
+      "id": "no_tax",
+      "logic": {
+        "==": [
+          {
+            "var": "income_tax_payer"
+          },
+          false
+        ]
+      },
+      "label": {
+        "hi": "आयकर दाता नहीं",
+        "en": "Not an income-tax payer"
+      },
+      "fail": {
+        "hi": "परिवार में आयकर दाता होने पर यह नहीं मिलती",
+        "en": "Not available if the family pays income tax"
+      }
+    }
+  ],
+  "documents": [
+    "aadhaar",
+    "bank_passbook"
+  ],
+  "form": [
+    "name",
+    "dob",
+    "mobile",
+    "aadhaar_last4",
+    "bank_account",
+    "ifsc"
+  ],
+  "source_url": "https://npscra.nsdl.co.in/scheme-details.php",
+  "verification": {
+    "status": "cross_checked",
+    "note": "Income-tax bar per the Finance Ministry notification of 10 Aug 2022."
+  },
+  "last_verified": "2026-11-02"
+}

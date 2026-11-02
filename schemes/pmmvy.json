@@ -1,0 +1,122 @@
+{
+  "id": "pmmvy",
+  "level": "central",
+  "name": {
+    "hi": "प्रधानमंत्री मातृ वंदना योजना",
+    "en": "PM Matru Vandana Yojana"
+  },
+  "aliases": [
+    "मातृ वंदना",
+    "matru vandana",
+    "pmmvy"
+  ],
+  "benefit": {
+    "one_time_inr": 5000,
+    "hi": "पहले बच्चे पर ₹5,000, दूसरी संतान बेटी होने पर ₹6,000",
+    "en": "₹5,000 for the first child, ₹6,000 if the second child is a girl"
+  },
+  "beneficiary": {
+    "hi": "गर्भवती या स्तनपान कराने वाली माँ",
+    "en": "Pregnant or lactating mother"
+  },
+  "criteria": [
+    {
+      "id": "woman",
+      "logic": {
+        "==": [
+          {
+            "var": "gender"
+          },
+          "female"
+        ]
+      },
+      "label": {
+        "hi": "महिला आवेदक",
+        "en": "Woman applicant"
+      },
+      "fail": {
+        "hi": "यह योजना महिलाओं के लिए है",
+        "en": "This scheme is for women"
+      }
+    },
+    {
+      "id": "age_min_19",
+      "logic": {
+        ">=": [
+          {
+            "var": "age"
+          },
+          19
+        ]
+      },
+      "label": {
+        "hi": "उम्र 19+",
+        "en": "Age 19+"
+      },
+      "fail": {
+        "hi": "उम्र {age} है, कम से कम 19 चाहिए",
+        "en": "Age is {age}, must be at least 19"
+      }
+    },
+    {
+      "id": "age_max_50",
+      "logic": {
+        "<=": [
+          {
+            "var": "age"
+          },
+          50
+        ]
+      },
+      "label": {
+        "hi": "उम्र 50 तक",
+        "en": "Age up to 50"
+      },
+      "fail": {
+        "hi": "उम्र {age} है, 50 तक ही मान्य",
+        "en": "Age is {age}, limit is 50"
+      }
+    },
+    {
+      "id": "pregnant",
+      "logic": {
+        "==": [
+          {
+            "var": "pregnant_or_lactating"
+          },
+          true
+        ]
+      },
+      "label": {
+        "hi": "गर्भवती या स्तनपान",
+        "en": "Pregnant or lactating"
+      },
+      "fail": {
+        "hi": "गर्भवती या स्तनपान कराने वाली महिलाओं के लिए है",
+        "en": "Only for pregnant or lactating women"
+      }
+    }
+  ],
+  "documents": [
+    "aadhaar",
+    "bank_passbook",
+    "mcp_card"
+  ],
+  "form": [
+    "name",
+    "guardian_name",
+    "dob",
+    "address",
+    "district",
+    "mobile",
+    "aadhaar_last4",
+    "bank_account",
+    "ifsc"
+  ],
+  "source_url": "https://wcd.nic.in/schemes/pradhan-mantri-matru-vandana-yojana",
+  "verification": {
+    "status": "cross_checked",
+    "note": "Amounts confirmed. The age 19 condition comes from the guidelines as we know them; our search did not independently confirm it. Age 50 is our screening limit, so older women are not asked about pregnancy; it is not an official rule."
+  },
+  "last_verified": "2026-11-02"
+}

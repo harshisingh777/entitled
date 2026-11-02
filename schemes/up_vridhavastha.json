@@ -1,0 +1,160 @@
+{
+  "id": "up_vridhavastha",
+  "level": "up",
+  "conflict_group": "pension",
+  "name": {
+    "hi": "यूपी वृद्धावस्था पेंशन",
+    "en": "UP Old-Age Pension"
+  },
+  "aliases": [
+    "वृद्धावस्था",
+    "vridhavastha",
+    "vridha",
+    "बुढ़ापा पेंशन",
+    "old age"
+  ],
+  "benefit": {
+    "annual_inr": 12000,
+    "hi": "₹1,000 महीना",
+    "en": "₹1,000 a month"
+  },
+  "beneficiary": {
+    "hi": "आवेदक",
+    "en": "The applicant"
+  },
+  "criteria": [
+    {
+      "id": "age_min_60",
+      "logic": {
+        ">=": [
+          {
+            "var": "age"
+          },
+          60
+        ]
+      },
+      "label": {
+        "hi": "उम्र 60+",
+        "en": "Age 60+"
+      },
+      "fail": {
+        "hi": "उम्र {age} है, कम से कम 60 चाहिए",
+        "en": "Age is {age}, must be at least 60"
+      },
+      "gap": {
+        "kind": "wait",
+        "var": "age",
+        "threshold": 60,
+        "max_years": 5
+      }
+    },
+    {
+      "id": "state_up",
+      "logic": {
+        "==": [
+          {
+            "var": "state_up"
+          },
+          true
+        ]
+      },
+      "label": {
+        "hi": "उत्तर प्रदेश निवासी",
+        "en": "UP resident"
+      },
+      "fail": {
+        "hi": "यह योजना सिर्फ़ उत्तर प्रदेश के निवासियों के लिए है",
+        "en": "Only for Uttar Pradesh residents"
+      }
+    },
+    {
+      "id": "income_limit",
+      "logic": {
+        "or": [
+          {
+            "and": [
+              {
+                "==": [
+                  {
+                    "var": "area"
+                  },
+                  "rural"
+                ]
+              },
+              {
+                "<=": [
+                  {
+                    "var": "annual_income"
+                  },
+                  46080
+                ]
+              }
+            ]
+          },
+          {
+            "and": [
+              {
+                "==": [
+                  {
+                    "var": "area"
+                  },
+                  "urban"
+                ]
+              },
+              {
+                "<=": [
+                  {
+                    "var": "annual_income"
+                  },
+                  56460
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "label": {
+        "hi": "आय सीमा (गाँव ₹46,080 / शहर ₹56,460)",
+        "en": "Income limit (rural ₹46,080 / urban ₹56,460)"
+      },
+      "fail": {
+        "hi": "सालाना आय ₹{annual_income} सीमा से ज़्यादा है",
+        "en": "Annual income ₹{annual_income} is over the limit"
+      }
+    }
+  ],
+  "documents": [
+    "aadhaar",
+    "bank_passbook",
+    "ration_card",
+    {
+      "id": "income_certificate",
+      "unless": {
+        "==": [
+          {
+            "var": "bpl_card"
+          },
+          true
+        ]
+      }
+    }
+  ],
+  "form": [
+    "name",
+    "guardian_name",
+    "dob",
+    "address",
+    "district",
+    "mobile",
+    "aadhaar_last4",
+    "bank_account",
+    "ifsc",
+    "annual_income"
+  ],
+  "source_url": "https://sspy-up.gov.in/",
+  "verification": {
+    "status": "conflicting",
+    "note": "Most sources say ₹1,000 a month, one says ₹1,200. We use ₹1,000. A BPL card stands in for the income certificate at screening: our assumption, not an official rule."
+  },
+  "last_verified": "2026-11-02"
+}

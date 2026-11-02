@@ -1,0 +1,122 @@
+{
+  "id": "pm_ujjwala",
+  "level": "central",
+  "name": {
+    "hi": "प्रधानमंत्री उज्ज्वला योजना",
+    "en": "PM Ujjwala Yojana"
+  },
+  "aliases": [
+    "उज्ज्वला",
+    "ujjwala",
+    "गैस कनेक्शन",
+    "gas connection"
+  ],
+  "benefit": {
+    "hi": "मुफ़्त LPG कनेक्शन",
+    "en": "Free LPG connection"
+  },
+  "beneficiary": {
+    "hi": "घर की वयस्क महिला",
+    "en": "Adult woman of the household"
+  },
+  "criteria": [
+    {
+      "id": "woman",
+      "logic": {
+        "==": [
+          {
+            "var": "gender"
+          },
+          "female"
+        ]
+      },
+      "label": {
+        "hi": "महिला आवेदक",
+        "en": "Woman applicant"
+      },
+      "fail": {
+        "hi": "यह योजना महिलाओं के लिए है",
+        "en": "This scheme is for women"
+      }
+    },
+    {
+      "id": "age_min_18",
+      "logic": {
+        ">=": [
+          {
+            "var": "age"
+          },
+          18
+        ]
+      },
+      "label": {
+        "hi": "उम्र 18+",
+        "en": "Age 18+"
+      },
+      "fail": {
+        "hi": "उम्र {age} है, कम से कम 18 चाहिए",
+        "en": "Age is {age}, must be at least 18"
+      }
+    },
+    {
+      "id": "bpl_card",
+      "logic": {
+        "==": [
+          {
+            "var": "bpl_card"
+          },
+          true
+        ]
+      },
+      "label": {
+        "hi": "BPL कार्ड",
+        "en": "BPL card"
+      },
+      "fail": {
+        "hi": "BPL या अंत्योदय कार्ड नहीं है",
+        "en": "No BPL or Antyodaya card"
+      }
+    },
+    {
+      "id": "no_lpg",
+      "logic": {
+        "==": [
+          {
+            "var": "has_lpg"
+          },
+          false
+        ]
+      },
+      "label": {
+        "hi": "घर में LPG नहीं",
+        "en": "No LPG at home"
+      },
+      "fail": {
+        "hi": "घर में पहले से LPG कनेक्शन है",
+        "en": "Household already has an LPG connection"
+      }
+    }
+  ],
+  "documents": [
+    "aadhaar",
+    "ration_card",
+    "bank_passbook"
+  ],
+  "form": [
+    "name",
+    "guardian_name",
+    "dob",
+    "address",
+    "district",
+    "mobile",
+    "aadhaar_last4",
+    "bank_account",
+    "ifsc"
+  ],
+  "source_url": "https://www.pmuy.gov.in/",
+  "verification": {
+    "status": "cross_checked",
+    "note": "BPL card is used as the proxy for the deprivation declaration; the distributor makes the final check."
+  },
+  "last_verified": "2026-11-02"
+}

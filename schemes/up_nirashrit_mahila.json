@@ -1,0 +1,157 @@
+{
+  "id": "up_nirashrit_mahila",
+  "level": "up",
+  "conflict_group": "pension",
+  "name": {
+    "hi": "यूपी निराश्रित महिला पेंशन",
+    "en": "UP Widow Pension"
+  },
+  "aliases": [
+    "निराश्रित",
+    "nirashrit",
+    "विधवा पेंशन",
+    "vidhwa pension",
+    "widow pension"
+  ],
+  "benefit": {
+    "annual_inr": 12000,
+    "hi": "₹1,000 महीना",
+    "en": "₹1,000 a month"
+  },
+  "beneficiary": {
+    "hi": "आवेदक",
+    "en": "The applicant"
+  },
+  "criteria": [
+    {
+      "id": "woman",
+      "logic": {
+        "==": [
+          {
+            "var": "gender"
+          },
+          "female"
+        ]
+      },
+      "label": {
+        "hi": "महिला आवेदक",
+        "en": "Woman applicant"
+      },
+      "fail": {
+        "hi": "यह योजना महिलाओं के लिए है",
+        "en": "This scheme is for women"
+      }
+    },
+    {
+      "id": "widow",
+      "logic": {
+        "==": [
+          {
+            "var": "is_widow"
+          },
+          true
+        ]
+      },
+      "label": {
+        "hi": "विधवा",
+        "en": "Widow"
+      },
+      "fail": {
+        "hi": "विधवा महिलाओं के लिए है",
+        "en": "Only for widows"
+      }
+    },
+    {
+      "id": "age_min_18",
+      "logic": {
+        ">=": [
+          {
+            "var": "age"
+          },
+          18
+        ]
+      },
+      "label": {
+        "hi": "उम्र 18+",
+        "en": "Age 18+"
+      },
+      "fail": {
+        "hi": "उम्र {age} है, कम से कम 18 चाहिए",
+        "en": "Age is {age}, must be at least 18"
+      }
+    },
+    {
+      "id": "state_up",
+      "logic": {
+        "==": [
+          {
+            "var": "state_up"
+          },
+          true
+        ]
+      },
+      "label": {
+        "hi": "उत्तर प्रदेश निवासी",
+        "en": "UP resident"
+      },
+      "fail": {
+        "hi": "यह योजना सिर्फ़ उत्तर प्रदेश के निवासियों के लिए है",
+        "en": "Only for Uttar Pradesh residents"
+      }
+    },
+    {
+      "id": "income_max_200000",
+      "logic": {
+        "<=": [
+          {
+            "var": "annual_income"
+          },
+          200000
+        ]
+      },
+      "label": {
+        "hi": "सालाना आय ₹2,00,000 तक",
+        "en": "Annual income up to ₹2,00,000"
+      },
+      "fail": {
+        "hi": "सालाना आय ₹{annual_income} है, सीमा ₹2,00,000 है",
+        "en": "Annual income is ₹{annual_income}, limit is ₹2,00,000"
+      }
+    }
+  ],
+  "documents": [
+    "aadhaar",
+    "bank_passbook",
+    "ration_card",
+    "death_certificate",
+    {
+      "id": "income_certificate",
+      "unless": {
+        "==": [
+          {
+            "var": "bpl_card"
+          },
+          true
+        ]
+      }
+    }
+  ],
+  "form": [
+    "name",
+    "guardian_name",
+    "dob",
+    "address",
+    "district",
+    "mobile",
+    "aadhaar_last4",
+    "bank_account",
+    "ifsc",
+    "annual_income"
+  ],
+  "source_url": "https://sspy-up.gov.in/",
+  "verification": {
+    "status": "conflicting",
+    "note": "Most sources say ₹1,000 a month, two say ₹500. One guide adds an upper age of 60, not encoded here. A BPL card stands in for the income certificate at screening: our assumption, not an official rule."
+  },
+  "last_verified": "2026-11-02"
+}

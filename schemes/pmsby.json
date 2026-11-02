@@ -1,0 +1,104 @@
+{
+  "id": "pmsby",
+  "level": "central",
+  "name": {
+    "hi": "पीएम सुरक्षा बीमा",
+    "en": "PM Suraksha Bima"
+  },
+  "aliases": [
+    "सुरक्षा बीमा",
+    "suraksha bima",
+    "pmsby"
+  ],
+  "benefit": {
+    "cover_inr": 200000,
+    "hi": "₹2 लाख का दुर्घटना बीमा, ₹20 सालाना",
+    "en": "₹2 lakh accident cover for ₹20 a year"
+  },
+  "beneficiary": {
+    "hi": "आवेदक",
+    "en": "The applicant"
+  },
+  "criteria": [
+    {
+      "id": "age_min_18",
+      "logic": {
+        ">=": [
+          {
+            "var": "age"
+          },
+          18
+        ]
+      },
+      "label": {
+        "hi": "उम्र 18+",
+        "en": "Age 18+"
+      },
+      "fail": {
+        "hi": "उम्र {age} है, कम से कम 18 चाहिए",
+        "en": "Age is {age}, must be at least 18"
+      }
+    },
+    {
+      "id": "age_max_70",
+      "logic": {
+        "<=": [
+          {
+            "var": "age"
+          },
+          70
+        ]
+      },
+      "label": {
+        "hi": "उम्र 70 तक",
+        "en": "Age up to 70"
+      },
+      "fail": {
+        "hi": "उम्र {age} है, 70 तक ही मान्य",
+        "en": "Age is {age}, limit is 70"
+      }
+    },
+    {
+      "id": "bank",
+      "logic": {
+        "==": [
+          {
+            "var": "has_bank_account"
+          },
+          true
+        ]
+      },
+      "label": {
+        "hi": "बैंक खाता",
+        "en": "Bank account"
+      },
+      "fail": {
+        "hi": "बैंक खाता नहीं है",
+        "en": "No bank account"
+      },
+      "gap": {
+        "kind": "action",
+        "hi": "जन धन खाता खुलवा लें, फिर {scheme} मिल सकती है",
+        "en": "Open a Jan Dhan account, then {scheme} is possible"
+      }
+    }
+  ],
+  "documents": [
+    "aadhaar",
+    "bank_passbook"
+  ],
+  "form": [
+    "name",
+    "dob",
+    "mobile",
+    "aadhaar_last4",
+    "bank_account",
+    "ifsc"
+  ],
+  "source_url": "https://jansuraksha.gov.in/",
+  "verification": {
+    "status": "cross_checked",
+    "note": "Premium and age band confirmed across bank pages."
+  },
+  "last_verified": "2026-11-02"
+}

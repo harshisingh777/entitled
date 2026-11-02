@@ -1,0 +1,450 @@
+{
+  "documents": {
+    "aadhaar": {
+      "hi": "आधार कार्ड",
+      "en": "Aadhaar card",
+      "where": {
+        "hi": "नज़दीकी आधार केंद्र",
+        "en": "Nearest Aadhaar centre"
+      },
+      "time": {
+        "hi": "1 से 2 हफ़्ते",
+        "en": "1 to 2 weeks"
+      }
+    },
+    "ration_card": {
+      "hi": "राशन कार्ड",
+      "en": "Ration card",
+      "where": {
+        "hi": "तहसील या CSC",
+        "en": "Tehsil or CSC"
+      },
+      "time": {
+        "hi": "2 से 4 हफ़्ते",
+        "en": "2 to 4 weeks"
+      }
+    },
+    "bank_passbook": {
+      "hi": "बैंक पासबुक",
+      "en": "Bank passbook",
+      "where": {
+        "hi": "बैंक शाखा या बैंक मित्र",
+        "en": "Bank branch or Bank Mitra"
+      },
+      "time": {
+        "hi": "1 से 3 दिन",
+        "en": "1 to 3 days"
+      }
+    },
+    "income_certificate": {
+      "hi": "आय प्रमाण पत्र",
+      "en": "Income certificate",
+      "where": {
+        "hi": "तहसील या CSC, ई-डिस्ट्रिक्ट पर ऑनलाइन",
+        "en": "Tehsil or CSC, online on e-District"
+      },
+      "time": {
+        "hi": "7 से 15 दिन",
+        "en": "7 to 15 days"
+      }
+    },
+    "birth_certificate": {
+      "hi": "जन्म प्रमाण पत्र",
+      "en": "Birth certificate",
+      "where": {
+        "hi": "ग्राम पंचायत या नगर पालिका",
+        "en": "Gram Panchayat or municipality"
+      },
+      "time": {
+        "hi": "7 से 21 दिन",
+        "en": "7 to 21 days"
+      }
+    },
+    "death_certificate": {
+      "hi": "पति का मृत्यु प्रमाण पत्र",
+      "en": "Husband's death certificate",
+      "where": {
+        "hi": "ग्राम पंचायत या नगर पालिका",
+        "en": "Gram Panchayat or municipality"
+      },
+      "time": {
+        "hi": "7 से 21 दिन",
+        "en": "7 to 21 days"
+      }
+    },
+    "land_record": {
+      "hi": "खतौनी (ज़मीन का काग़ज़)",
+      "en": "Land record (khatauni)",
+      "where": {
+        "hi": "तहसील या भूलेख वेबसाइट",
+        "en": "Tehsil or Bhulekh website"
+      },
+      "time": {
+        "hi": "उसी दिन",
+        "en": "Same day"
+      }
+    },
+    "mcp_card": {
+      "hi": "जच्चा-बच्चा (MCP) कार्ड",
+      "en": "Mother and child (MCP) card",
+      "where": {
+        "hi": "आंगनवाड़ी या ASHA",
+        "en": "Anganwadi or ASHA"
+      },
+      "time": {
+        "hi": "उसी दिन",
+        "en": "Same day"
+      }
+    },
+    "school_id": {
+      "hi": "स्कूल या कॉलेज का पहचान पत्र",
+      "en": "School or college ID",
+      "where": {
+        "hi": "स्कूल या कॉलेज",
+        "en": "School or college"
+      },
+      "time": {
+        "hi": "1 से 3 दिन",
+        "en": "1 to 3 days"
+      }
+    }
+  },
+  "profile_fields": {
+    "name": {
+      "hi": "आवेदक का नाम",
+      "en": "Applicant name",
+      "ask_hi": "आवेदक का पूरा नाम बताइए।",
+      "ask_en": "What is the applicant's full name?"
+    },
+    "guardian_name": {
+      "hi": "पति / पिता का नाम",
+      "en": "Husband's or father's name",
+      "ask_hi": "पति या पिता का नाम बताइए।",
+      "ask_en": "What is the husband's or father's name?"
+    },
+    "dob": {
+      "hi": "जन्म तिथि",
+      "en": "Date of birth",
+      "ask_hi": "जन्म तिथि बताइए, जैसे 15/03/1968।",
+      "ask_en": "What is the date of birth? For example 15/03/1968."
+    },
+    "address": {
+      "hi": "पता",
+      "en": "Address",
+      "ask_hi": "गाँव और पता बताइए।",
+      "ask_en": "What is the village and address?"
+    },
+    "district": {
+      "hi": "ज़िला",
+      "en": "District",
+      "ask_hi": "कौन सा ज़िला है?",
+      "ask_en": "Which district?"
+    },
+    "mobile": {
+      "hi": "मोबाइल नंबर",
+      "en": "Mobile number",
+      "ask_hi": "10 अंकों का मोबाइल नंबर बताइए।",
+      "ask_en": "What is the 10-digit mobile number?",
+      "digits": true
+    },
+    "aadhaar_last4": {
+      "hi": "आधार (अंतिम 4 अंक)",
+      "en": "Aadhaar (last 4 digits)",
+      "ask_hi": "आधार के सिर्फ़ आख़िरी 4 अंक बताइए।",
+      "ask_en": "Tell me only the last 4 digits of the Aadhaar.",
+      "digits": true
+    },
+    "bank_account": {
+      "hi": "बैंक खाता संख्या",
+      "en": "Bank account number",
+      "ask_hi": "बैंक खाता संख्या बताइए।",
+      "ask_en": "What is the bank account number?",
+      "digits": true
+    },
+    "ifsc": {
+      "hi": "IFSC कोड",
+      "en": "IFSC code",
+      "ask_hi": "बैंक का IFSC कोड बताइए। पासबुक पर लिखा होता है।",
+      "ask_en": "What is the IFSC code? It is printed on the passbook."
+    },
+    "annual_income": {
+      "hi": "सालाना आय (₹)",
+      "en": "Annual income (₹)",
+      "ask_hi": "परिवार की सालाना आय कितनी है?",
+      "ask_en": "What is the family's annual income?"
+    },
+    "land_acres": {
+      "hi": "ज़मीन (एकड़)",
+      "en": "Land (acres)",
+      "ask_hi": "कितने एकड़ ज़मीन है?",
+      "ask_en": "How many acres of land?"
+    },
+    "girl_name": {
+      "hi": "बेटी का नाम",
+      "en": "Daughter's name",
+      "ask_hi": "बेटी का नाम बताइए।",
+      "ask_en": "What is the daughter's name?"
+    },
+    "girl_dob": {
+      "hi": "बेटी की जन्म तिथि",
+      "en": "Daughter's date of birth",
+      "ask_hi": "बेटी की जन्म तिथि बताइए।",
+      "ask_en": "What is the daughter's date of birth?"
+    }
+  },
+  "questions": {
+    "formal_income_screen": {
+      "type": "bool",
+      "covers": [
+        "income_tax_payer",
+        "govt_employee"
+      ],
+      "hi": "क्या परिवार में कोई आयकर भरता है या सरकारी नौकरी में है?",
+      "en": "Does anyone in the family pay income tax or work for the government?",
+      "label": {
+        "hi": "आयकर या सरकारी नौकरी",
+        "en": "Income tax or government job"
+      }
+    },
+    "rare_circumstances": {
+      "type": "bool",
+      "covers": [
+        "pregnant_or_lactating",
+        "traditional_artisan",
+        "student_class_9plus"
+      ],
+      "hi": "इनमें से कुछ है? घर में कोई गर्भवती या दूध पिलाती माँ, कोई पारंपरिक कारीगर जैसे बढ़ई या दर्जी, या कक्षा 9 से ऊपर पढ़ने वाला।",
+      "en": "Does any of these apply? A pregnant or breastfeeding mother at home, a traditional artisan such as a carpenter or tailor, or someone studying in class 9 or above.",
+      "label": {
+        "hi": "गर्भवती, कारीगर या विद्यार्थी",
+        "en": "Pregnant, artisan or student"
+      }
+    },
+    "age": {
+      "type": "int",
+      "samples": [
+        25,
+        45,
+        62,
+        75
+      ],
+      "hi": "आपकी उम्र कितनी है?",
+      "en": "How old are you?",
+      "label": {
+        "hi": "उम्र",
+        "en": "Age"
+      }
+    },
+    "gender": {
+      "type": "choice",
+      "samples": [
+        "female",
+        "male"
+      ],
+      "hi": "आवेदक महिला हैं या पुरुष?",
+      "en": "Is the applicant a woman or a man?",
+      "label": {
+        "hi": "लिंग",
+        "en": "Gender"
+      }
+    },
+    "is_widow": {
+      "type": "bool",
+      "depends_on": {
+        "==": [
+          {
+            "var": "gender"
+          },
+          "female"
+        ]
+      },
+      "hi": "क्या आप विधवा हैं?",
+      "en": "Are you a widow?",
+      "label": {
+        "hi": "विधवा",
+        "en": "Widow"
+      }
+    },
+    "state_up": {
+      "type": "bool",
+      "hi": "क्या आप उत्तर प्रदेश में रहते हैं?",
+      "en": "Do you live in Uttar Pradesh?",
+      "label": {
+        "hi": "उत्तर प्रदेश निवासी",
+        "en": "UP resident"
+      }
+    },
+    "area": {
+      "type": "choice",
+      "samples": [
+        "rural",
+        "urban"
+      ],
+      "hi": "आप गाँव में रहते हैं या शहर में?",
+      "en": "Do you live in a village or a town?",
+      "label": {
+        "hi": "क्षेत्र",
+        "en": "Area"
+      }
+    },
+    "bpl_card": {
+      "type": "bool",
+      "hi": "क्या आपके पास BPL या अंत्योदय राशन कार्ड है?",
+      "en": "Do you have a BPL or Antyodaya ration card?",
+      "label": {
+        "hi": "BPL कार्ड",
+        "en": "BPL card"
+      }
+    },
+    "annual_income": {
+      "type": "int",
+      "samples": [
+        30000,
+        50000,
+        150000,
+        250000,
+        400000
+      ],
+      "hi": "पूरे परिवार की सालाना कमाई लगभग कितनी है?",
+      "en": "About how much does the whole family earn in a year?",
+      "label": {
+        "hi": "सालाना आय",
+        "en": "Annual income"
+      }
+    },
+    "owns_farmland": {
+      "type": "bool",
+      "hi": "क्या परिवार के नाम खेती की ज़मीन है?",
+      "en": "Does the family own farmland?",
+      "label": {
+        "hi": "खेती की ज़मीन",
+        "en": "Farmland"
+      }
+    },
+    "income_tax_payer": {
+      "type": "bool",
+      "hi": "क्या परिवार में कोई आयकर भरता है?",
+      "en": "Does anyone in the family pay income tax?",
+      "label": {
+        "hi": "आयकर दाता",
+        "en": "Income-tax payer"
+      }
+    },
+    "govt_employee": {
+      "type": "bool",
+      "hi": "क्या परिवार में कोई सरकारी नौकरी में है?",
+      "en": "Is anyone in the family a government employee?",
+      "label": {
+        "hi": "सरकारी कर्मचारी",
+        "en": "Government employee"
+      }
+    },
+    "girl_children_count": {
+      "type": "int",
+      "samples": [
+        0,
+        1,
+        3
+      ],
+      "hi": "घर में कितनी बेटियाँ या पोतियाँ हैं?",
+      "en": "How many daughters or granddaughters are at home?",
+      "label": {
+        "hi": "बेटियाँ",
+        "en": "Daughters"
+      }
+    },
+    "youngest_girl_age": {
+      "type": "int",
+      "samples": [
+        6,
+        14,
+        25
+      ],
+      "depends_on": {
+        ">=": [
+          {
+            "var": "girl_children_count"
+          },
+          1
+        ]
+      },
+      "hi": "सबसे छोटी बेटी कितने साल की है?",
+      "en": "How old is the youngest daughter?",
+      "label": {
+        "hi": "छोटी बेटी की उम्र",
+        "en": "Youngest daughter's age"
+      }
+    },
+    "has_lpg": {
+      "type": "bool",
+      "hi": "क्या घर में गैस कनेक्शन है?",
+      "en": "Is there an LPG connection at home?",
+      "label": {
+        "hi": "गैस कनेक्शन",
+        "en": "LPG connection"
+      }
+    },
+    "has_pucca_house": {
+      "type": "bool",
+      "hi": "क्या परिवार के पास पक्का घर है?",
+      "en": "Does the family have a pucca house?",
+      "label": {
+        "hi": "पक्का घर",
+        "en": "Pucca house"
+      }
+    },
+    "pregnant_or_lactating": {
+      "type": "bool",
+      "depends_on": {
+        "==": [
+          {
+            "var": "gender"
+          },
+          "female"
+        ]
+      },
+      "hi": "क्या आप गर्भवती हैं या शिशु को दूध पिलाती हैं?",
+      "en": "Are you pregnant or breastfeeding?",
+      "label": {
+        "hi": "गर्भवती या स्तनपान",
+        "en": "Pregnant or lactating"
+      }
+    },
+    "traditional_artisan": {
+      "type": "bool",
+      "hi": "क्या आप बढ़ई, लोहार, कुम्हार, दर्जी जैसा पारंपरिक काम करते हैं?",
+      "en": "Do you do traditional work such as carpentry, smithing, pottery or tailoring?",
+      "label": {
+        "hi": "पारंपरिक कारीगर",
+        "en": "Traditional artisan"
+      }
+    },
+    "has_bank_account": {
+      "type": "bool",
+      "hi": "क्या आपका बैंक खाता है?",
+      "en": "Do you have a bank account?",
+      "label": {
+        "hi": "बैंक खाता",
+        "en": "Bank account"
+      }
+    },
+    "student_class_9plus": {
+      "type": "bool",
+      "hi": "क्या घर में कोई कक्षा 9 या उससे ऊपर पढ़ता है?",
+      "en": "Is anyone at home studying in class 9 or above?",
+      "label": {
+        "hi": "कक्षा 9+ विद्यार्थी",
+        "en": "Student in class 9+"
+      }
+    },
+    "doc_income_certificate": {
+      "type": "bool",
+      "hi": "क्या आपके पास आय प्रमाण पत्र है?",
+      "en": "Do you have an income certificate?",
+      "label": {
+        "hi": "आय प्रमाण पत्र",
+        "en": "Income certificate"
+      }
+    }
+  }
+}

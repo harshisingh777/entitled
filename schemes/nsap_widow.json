@@ -1,0 +1,137 @@
+{
+  "id": "nsap_widow",
+  "level": "central",
+  "conflict_group": "pension",
+  "name": {
+    "hi": "राष्ट्रीय विधवा पेंशन (NSAP)",
+    "en": "NSAP Widow Pension"
+  },
+  "aliases": [
+    "राष्ट्रीय विधवा",
+    "nsap widow",
+    "ignwps"
+  ],
+  "benefit": {
+    "annual_inr": 3600,
+    "tiers": [
+      {
+        "when": {
+          ">=": [
+            {
+              "var": "age"
+            },
+            80
+          ]
+        },
+        "annual_inr": 6000
+      }
+    ],
+    "hi": "₹300 महीना, 80 के बाद ₹500",
+    "en": "₹300 a month, ₹500 after 80"
+  },
+  "beneficiary": {
+    "hi": "आवेदक",
+    "en": "The applicant"
+  },
+  "criteria": [
+    {
+      "id": "woman",
+      "logic": {
+        "==": [
+          {
+            "var": "gender"
+          },
+          "female"
+        ]
+      },
+      "label": {
+        "hi": "महिला आवेदक",
+        "en": "Woman applicant"
+      },
+      "fail": {
+        "hi": "यह योजना महिलाओं के लिए है",
+        "en": "This scheme is for women"
+      }
+    },
+    {
+      "id": "widow",
+      "logic": {
+        "==": [
+          {
+            "var": "is_widow"
+          },
+          true
+        ]
+      },
+      "label": {
+        "hi": "विधवा",
+        "en": "Widow"
+      },
+      "fail": {
+        "hi": "विधवा महिलाओं के लिए है",
+        "en": "Only for widows"
+      }
+    },
+    {
+      "id": "age_min_40",
+      "logic": {
+        ">=": [
+          {
+            "var": "age"
+          },
+          40
+        ]
+      },
+      "label": {
+        "hi": "उम्र 40+",
+        "en": "Age 40+"
+      },
+      "fail": {
+        "hi": "उम्र {age} है, कम से कम 40 चाहिए",
+        "en": "Age is {age}, must be at least 40"
+      }
+    },
+    {
+      "id": "bpl_card",
+      "logic": {
+        "==": [
+          {
+            "var": "bpl_card"
+          },
+          true
+        ]
+      },
+      "label": {
+        "hi": "BPL कार्ड",
+        "en": "BPL card"
+      },
+      "fail": {
+        "hi": "BPL या अंत्योदय कार्ड नहीं है",
+        "en": "No BPL or Antyodaya card"
+      }
+    }
+  ],
+  "documents": [
+    "aadhaar",
+    "ration_card",
+    "bank_passbook",
+    "death_certificate"
+  ],
+  "form": [
+    "name",
+    "guardian_name",
+    "dob",
+    "address",
+    "district",
+    "mobile",
+    "aadhaar_last4",
+    "bank_account",
+    "ifsc"
+  ],
+  "source_url": "https://nsap.nic.in/",
+  "verification": {
+    "status": "cross_checked",
+    "note": "The ₹500 rate at 80 is less consistently reported than ₹300."
+  },
+  "last_verified": "2026-11-02"
+}

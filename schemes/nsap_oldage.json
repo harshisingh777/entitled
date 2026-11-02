@@ -1,0 +1,104 @@
+{
+  "id": "nsap_oldage",
+  "level": "central",
+  "conflict_group": "pension",
+  "name": {
+    "hi": "राष्ट्रीय वृद्धावस्था पेंशन (NSAP)",
+    "en": "NSAP Old-Age Pension"
+  },
+  "aliases": [
+    "राष्ट्रीय वृद्धावस्था",
+    "nsap old",
+    "ignoaps"
+  ],
+  "benefit": {
+    "annual_inr": 2400,
+    "tiers": [
+      {
+        "when": {
+          ">=": [
+            {
+              "var": "age"
+            },
+            80
+          ]
+        },
+        "annual_inr": 6000
+      }
+    ],
+    "hi": "₹200 महीना, 80 के बाद ₹500",
+    "en": "₹200 a month, ₹500 after 80"
+  },
+  "beneficiary": {
+    "hi": "आवेदक",
+    "en": "The applicant"
+  },
+  "criteria": [
+    {
+      "id": "age_min_60",
+      "logic": {
+        ">=": [
+          {
+            "var": "age"
+          },
+          60
+        ]
+      },
+      "label": {
+        "hi": "उम्र 60+",
+        "en": "Age 60+"
+      },
+      "fail": {
+        "hi": "उम्र {age} है, कम से कम 60 चाहिए",
+        "en": "Age is {age}, must be at least 60"
+      },
+      "gap": {
+        "kind": "wait",
+        "var": "age",
+        "threshold": 60,
+        "max_years": 5
+      }
+    },
+    {
+      "id": "bpl_card",
+      "logic": {
+        "==": [
+          {
+            "var": "bpl_card"
+          },
+          true
+        ]
+      },
+      "label": {
+        "hi": "BPL कार्ड",
+        "en": "BPL card"
+      },
+      "fail": {
+        "hi": "BPL या अंत्योदय कार्ड नहीं है",
+        "en": "No BPL or Antyodaya card"
+      }
+    }
+  ],
+  "documents": [
+    "aadhaar",
+    "ration_card",
+    "bank_passbook"
+  ],
+  "form": [
+    "name",
+    "guardian_name",
+    "dob",
+    "address",
+    "district",
+    "mobile",
+    "aadhaar_last4",
+    "bank_account",
+    "ifsc"
+  ],
+  "source_url": "https://myscheme.gov.in/schemes/nsap-ignoaps",
+  "verification": {
+    "status": "cross_checked",
+    "note": "Central share only. States often add a top-up."
+  },
+  "last_verified": "2026-11-02"
+}

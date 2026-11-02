@@ -1,0 +1,169 @@
+{
+  "id": "up_kanya_sumangala",
+  "level": "up",
+  "name": {
+    "hi": "मुख्यमंत्री कन्या सुमंगला योजना",
+    "en": "Kanya Sumangala Yojana"
+  },
+  "aliases": [
+    "कन्या सुमंगला",
+    "sumangala",
+    "kanya"
+  ],
+  "benefit": {
+    "one_time_inr": 25000,
+    "hi": "बेटी को ₹25,000, छह चरणों में",
+    "en": "₹25,000 for a daughter across six stages"
+  },
+  "beneficiary": {
+    "hi": "बेटी (परिवार में अधिकतम दो)",
+    "en": "Daughter (at most two per family)"
+  },
+  "criteria": [
+    {
+      "id": "state_up",
+      "logic": {
+        "==": [
+          {
+            "var": "state_up"
+          },
+          true
+        ]
+      },
+      "label": {
+        "hi": "उत्तर प्रदेश निवासी",
+        "en": "UP resident"
+      },
+      "fail": {
+        "hi": "यह योजना सिर्फ़ उत्तर प्रदेश के निवासियों के लिए है",
+        "en": "Only for Uttar Pradesh residents"
+      }
+    },
+    {
+      "id": "has_girl",
+      "logic": {
+        ">=": [
+          {
+            "var": "girl_children_count"
+          },
+          1
+        ]
+      },
+      "label": {
+        "hi": "घर में बेटी",
+        "en": "A daughter at home"
+      },
+      "fail": {
+        "hi": "घर में बेटी नहीं है",
+        "en": "No daughter at home"
+      }
+    },
+    {
+      "id": "max_two",
+      "logic": {
+        "<=": [
+          {
+            "var": "girl_children_count"
+          },
+          2
+        ]
+      },
+      "label": {
+        "hi": "अधिकतम दो बेटियाँ",
+        "en": "At most two daughters"
+      },
+      "fail": {
+        "hi": "दो से ज़्यादा बेटियों पर नहीं मिलती",
+        "en": "Not available beyond two daughters"
+      }
+    },
+    {
+      "id": "girl_under_18",
+      "logic": {
+        "<=": [
+          {
+            "var": "youngest_girl_age"
+          },
+          18
+        ]
+      },
+      "label": {
+        "hi": "बेटी 18 या कम",
+        "en": "Daughter 18 or younger"
+      },
+      "fail": {
+        "hi": "बेटी की उम्र {youngest_girl_age} है, चरण निकल चुके हैं",
+        "en": "Daughter is {youngest_girl_age}, the stages have passed"
+      }
+    },
+    {
+      "id": "income_max_300000",
+      "logic": {
+        "<=": [
+          {
+            "var": "annual_income"
+          },
+          300000
+        ]
+      },
+      "label": {
+        "hi": "सालाना आय ₹3,00,000 तक",
+        "en": "Annual income up to ₹3,00,000"
+      },
+      "fail": {
+        "hi": "सालाना आय ₹{annual_income} है, सीमा ₹3,00,000 है",
+        "en": "Annual income is ₹{annual_income}, limit is ₹3,00,000"
+      }
+    },
+    {
+      "id": "income_certificate",
+      "logic": {
+        "==": [
+          {
+            "var": "doc_income_certificate"
+          },
+          true
+        ]
+      },
+      "label": {
+        "hi": "आय प्रमाण पत्र",
+        "en": "Income certificate"
+      },
+      "fail": {
+        "hi": "आय प्रमाण पत्र नहीं है",
+        "en": "No income certificate"
+      },
+      "gap": {
+        "kind": "document",
+        "doc": "income_certificate",
+        "hi": "आय प्रमाण पत्र बनवा लें, फिर {scheme} मिल सकती है",
+        "en": "Get an income certificate, then {scheme} is possible"
+      }
+    }
+  ],
+  "documents": [
+    "aadhaar",
+    "ration_card",
+    "bank_passbook",
+    "income_certificate",
+    "birth_certificate"
+  ],
+  "form": [
+    "name",
+    "guardian_name",
+    "girl_name",
+    "girl_dob",
+    "address",
+    "district",
+    "mobile",
+    "aadhaar_last4",
+    "bank_account",
+    "ifsc"
+  ],
+  "source_url": "https://mksy.up.gov.in/",
+  "verification": {
+    "status": "conflicting",
+    "note": "₹25,000 and the ₹3 lakh cap are widely reported, but one source says BPL only. Check at mksy.up.gov.in."
+  },
+  "last_verified": "2026-11-02"
+}

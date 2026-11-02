@@ -1,0 +1,80 @@
+{
+  "id": "ssy",
+  "level": "central",
+  "name": {
+    "hi": "सुकन्या समृद्धि योजना",
+    "en": "Sukanya Samriddhi Yojana"
+  },
+  "aliases": [
+    "सुकन्या",
+    "sukanya",
+    "ssy"
+  ],
+  "benefit": {
+    "hi": "बेटी के लिए बचत खाता, लगभग 8.2% ब्याज (जमा आपको करना है)",
+    "en": "Savings account for a daughter, about 8.2% interest (you make the deposits)"
+  },
+  "beneficiary": {
+    "hi": "10 साल से छोटी बेटी",
+    "en": "Daughter under 10"
+  },
+  "criteria": [
+    {
+      "id": "has_girl",
+      "logic": {
+        ">=": [
+          {
+            "var": "girl_children_count"
+          },
+          1
+        ]
+      },
+      "label": {
+        "hi": "घर में बेटी",
+        "en": "A daughter at home"
+      },
+      "fail": {
+        "hi": "घर में बेटी नहीं है",
+        "en": "No daughter at home"
+      }
+    },
+    {
+      "id": "girl_under_10",
+      "logic": {
+        "<": [
+          {
+            "var": "youngest_girl_age"
+          },
+          10
+        ]
+      },
+      "label": {
+        "hi": "बेटी 10 साल से छोटी",
+        "en": "Daughter under 10"
+      },
+      "fail": {
+        "hi": "बेटी की उम्र {youngest_girl_age} है, 10 से कम चाहिए",
+        "en": "Daughter is {youngest_girl_age}, must be under 10"
+      }
+    }
+  ],
+  "documents": [
+    "aadhaar",
+    "birth_certificate"
+  ],
+  "form": [
+    "name",
+    "girl_name",
+    "girl_dob",
+    "address",
+    "district",
+    "mobile",
+    "aadhaar_last4"
+  ],
+  "source_url": "https://www.indiapost.gov.in/",
+  "verification": {
+    "status": "cross_checked",
+    "note": "This is a savings product, so it adds nothing to the yearly benefit total. Rate is reviewed quarterly."
+  },
+  "last_verified": "2026-11-02"
+}

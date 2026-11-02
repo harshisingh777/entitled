@@ -1,0 +1,15 @@
+{
+  "name": "Entitled",
+  "short_name": "Entitled",
+  "description": "What is rightfully yours should reach you. Find, prove and claim the government schemes your family is entitled to.",
+  "lang": "en",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F6F1E6",
+  "theme_color": "#232C7A",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

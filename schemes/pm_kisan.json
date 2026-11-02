@@ -1,0 +1,105 @@
+{
+  "id": "pm_kisan",
+  "level": "central",
+  "name": {
+    "hi": "पीएम-किसान सम्मान निधि",
+    "en": "PM-KISAN"
+  },
+  "aliases": [
+    "किसान",
+    "kisan",
+    "pm kisan",
+    "पीएम किसान"
+  ],
+  "benefit": {
+    "annual_inr": 6000,
+    "hi": "₹6,000 हर साल, तीन किस्तों में",
+    "en": "₹6,000 a year in three instalments"
+  },
+  "beneficiary": {
+    "hi": "जिसके नाम ज़मीन है",
+    "en": "The registered landholder"
+  },
+  "criteria": [
+    {
+      "id": "farmland",
+      "logic": {
+        "==": [
+          {
+            "var": "owns_farmland"
+          },
+          true
+        ]
+      },
+      "label": {
+        "hi": "खेती की ज़मीन",
+        "en": "Owns farmland"
+      },
+      "fail": {
+        "hi": "परिवार के नाम खेती की ज़मीन नहीं है",
+        "en": "No farmland in the family's name"
+      }
+    },
+    {
+      "id": "no_tax",
+      "logic": {
+        "==": [
+          {
+            "var": "income_tax_payer"
+          },
+          false
+        ]
+      },
+      "label": {
+        "hi": "आयकर दाता नहीं",
+        "en": "Not an income-tax payer"
+      },
+      "fail": {
+        "hi": "परिवार में आयकर दाता होने पर यह नहीं मिलती",
+        "en": "Not available if the family pays income tax"
+      }
+    },
+    {
+      "id": "no_govt",
+      "logic": {
+        "==": [
+          {
+            "var": "govt_employee"
+          },
+          false
+        ]
+      },
+      "label": {
+        "hi": "सरकारी कर्मचारी नहीं",
+        "en": "No government employee"
+      },
+      "fail": {
+        "hi": "परिवार में सरकारी कर्मचारी होने पर यह नहीं मिलती",
+        "en": "Not available with a government employee in the family"
+      }
+    }
+  ],
+  "documents": [
+    "aadhaar",
+    "bank_passbook",
+    "land_record"
+  ],
+  "form": [
+    "name",
+    "guardian_name",
+    "dob",
+    "address",
+    "district",
+    "mobile",
+    "aadhaar_last4",
+    "bank_account",
+    "ifsc",
+    "land_acres"
+  ],
+  "source_url": "https://pmkisan.gov.in/",
+  "verification": {
+    "status": "cross_checked",
+    "note": "Amount and exclusions match the PM-KISAN FAQ. Pensioner and professional exclusions are not asked, the department checks them."
+  },
+  "last_verified": "2026-11-02"
+}

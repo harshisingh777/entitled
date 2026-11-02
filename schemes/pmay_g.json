@@ -1,0 +1,124 @@
+{
+  "id": "pmay_g",
+  "level": "central",
+  "name": {
+    "hi": "प्रधानमंत्री आवास योजना – ग्रामीण",
+    "en": "PMAY-Gramin"
+  },
+  "aliases": [
+    "आवास",
+    "awas",
+    "awaas",
+    "pmay",
+    "घर योजना"
+  ],
+  "benefit": {
+    "one_time_inr": 120000,
+    "hi": "पक्का घर बनाने के लिए लगभग ₹1.2 लाख",
+    "en": "About ₹1.2 lakh to build a pucca house"
+  },
+  "beneficiary": {
+    "hi": "परिवार",
+    "en": "The household"
+  },
+  "criteria": [
+    {
+      "id": "rural",
+      "logic": {
+        "==": [
+          {
+            "var": "area"
+          },
+          "rural"
+        ]
+      },
+      "label": {
+        "hi": "ग्रामीण क्षेत्र",
+        "en": "Rural area"
+      },
+      "fail": {
+        "hi": "यह ग्रामीण क्षेत्र के लिए है",
+        "en": "Only for rural areas"
+      }
+    },
+    {
+      "id": "no_pucca",
+      "logic": {
+        "==": [
+          {
+            "var": "has_pucca_house"
+          },
+          false
+        ]
+      },
+      "label": {
+        "hi": "पक्का घर नहीं",
+        "en": "No pucca house"
+      },
+      "fail": {
+        "hi": "परिवार के पास पक्का घर है",
+        "en": "The family has a pucca house"
+      }
+    },
+    {
+      "id": "no_tax",
+      "logic": {
+        "==": [
+          {
+            "var": "income_tax_payer"
+          },
+          false
+        ]
+      },
+      "label": {
+        "hi": "आयकर दाता नहीं",
+        "en": "Not an income-tax payer"
+      },
+      "fail": {
+        "hi": "परिवार में आयकर दाता होने पर यह नहीं मिलती",
+        "en": "Not available if the family pays income tax"
+      }
+    },
+    {
+      "id": "no_govt",
+      "logic": {
+        "==": [
+          {
+            "var": "govt_employee"
+          },
+          false
+        ]
+      },
+      "label": {
+        "hi": "सरकारी कर्मचारी नहीं",
+        "en": "No government employee"
+      },
+      "fail": {
+        "hi": "परिवार में सरकारी कर्मचारी होने पर यह नहीं मिलती",
+        "en": "Not available with a government employee in the family"
+      }
+    }
+  ],
+  "documents": [
+    "aadhaar",
+    "bank_passbook",
+    "ration_card"
+  ],
+  "form": [
+    "name",
+    "guardian_name",
+    "dob",
+    "address",
+    "district",
+    "mobile",
+    "aadhaar_last4",
+    "bank_account",
+    "ifsc"
+  ],
+  "source_url": "https://pmayg.nic.in/",
+  "verification": {
+    "status": "conflicting",
+    "note": "Sources give ₹1.2 to ₹1.3 lakh. Selection also depends on the Awaas+ survey and Gram Sabha list, and exclusion parameters were revised in 2024."
+  },
+  "last_verified": "2026-11-02"
+}

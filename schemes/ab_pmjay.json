@@ -1,0 +1,75 @@
+{
+  "id": "ab_pmjay",
+  "level": "central",
+  "name": {
+    "hi": "आयुष्मान भारत (PM-JAY)",
+    "en": "Ayushman Bharat PM-JAY"
+  },
+  "aliases": [
+    "आयुष्मान",
+    "ayushman",
+    "pmjay",
+    "pm-jay",
+    "स्वास्थ्य बीमा"
+  ],
+  "benefit": {
+    "cover_inr": 500000,
+    "hi": "₹5 लाख तक का मुफ़्त इलाज, हर साल",
+    "en": "Free treatment up to ₹5 lakh a year"
+  },
+  "beneficiary": {
+    "hi": "पूरा परिवार",
+    "en": "The whole family"
+  },
+  "criteria": [
+    {
+      "id": "bpl_or_70",
+      "logic": {
+        "or": [
+          {
+            "==": [
+              {
+                "var": "bpl_card"
+              },
+              true
+            ]
+          },
+          {
+            ">=": [
+              {
+                "var": "age"
+              },
+              70
+            ]
+          }
+        ]
+      },
+      "label": {
+        "hi": "BPL कार्ड या उम्र 70+",
+        "en": "BPL card or age 70+"
+      },
+      "fail": {
+        "hi": "BPL कार्ड नहीं है और उम्र 70 से कम है",
+        "en": "No BPL card and under 70"
+      }
+    }
+  ],
+  "documents": [
+    "aadhaar",
+    "ration_card"
+  ],
+  "form": [
+    "name",
+    "dob",
+    "address",
+    "district",
+    "mobile",
+    "aadhaar_last4"
+  ],
+  "source_url": "https://pmjay.gov.in/",
+  "verification": {
+    "status": "cross_checked",
+    "note": "The real test is the SECC 2011 list, which we cannot query. BPL card is a screening proxy. 70+ cover follows the September 2024 Cabinet decision."
+  },
+  "last_verified": "2026-11-02"
+}

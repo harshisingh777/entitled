@@ -1,0 +1,105 @@
+{
+  "id": "up_scholarship",
+  "level": "up",
+  "name": {
+    "hi": "यूपी छात्रवृत्ति",
+    "en": "UP Scholarship"
+  },
+  "aliases": [
+    "छात्रवृत्ति",
+    "scholarship",
+    "वज़ीफ़ा",
+    "wazifa"
+  ],
+  "benefit": {
+    "hi": "कक्षा और वर्ग के अनुसार छात्रवृत्ति",
+    "en": "Scholarship by class and category"
+  },
+  "beneficiary": {
+    "hi": "कक्षा 9 या ऊपर का विद्यार्थी",
+    "en": "Student in class 9 or above"
+  },
+  "criteria": [
+    {
+      "id": "state_up",
+      "logic": {
+        "==": [
+          {
+            "var": "state_up"
+          },
+          true
+        ]
+      },
+      "label": {
+        "hi": "उत्तर प्रदेश निवासी",
+        "en": "UP resident"
+      },
+      "fail": {
+        "hi": "यह योजना सिर्फ़ उत्तर प्रदेश के निवासियों के लिए है",
+        "en": "Only for Uttar Pradesh residents"
+      }
+    },
+    {
+      "id": "student",
+      "logic": {
+        "==": [
+          {
+            "var": "student_class_9plus"
+          },
+          true
+        ]
+      },
+      "label": {
+        "hi": "कक्षा 9+ में विद्यार्थी",
+        "en": "Student in class 9+"
+      },
+      "fail": {
+        "hi": "घर में कक्षा 9 या ऊपर का विद्यार्थी नहीं है",
+        "en": "No student in class 9 or above"
+      }
+    },
+    {
+      "id": "income_max_200000",
+      "logic": {
+        "<=": [
+          {
+            "var": "annual_income"
+          },
+          200000
+        ]
+      },
+      "label": {
+        "hi": "सालाना आय ₹2,00,000 तक",
+        "en": "Annual income up to ₹2,00,000"
+      },
+      "fail": {
+        "hi": "सालाना आय ₹{annual_income} है, सीमा ₹2,00,000 है",
+        "en": "Annual income is ₹{annual_income}, limit is ₹2,00,000"
+      }
+    }
+  ],
+  "documents": [
+    "aadhaar",
+    "bank_passbook",
+    "income_certificate",
+    "school_id"
+  ],
+  "form": [
+    "name",
+    "guardian_name",
+    "dob",
+    "address",
+    "district",
+    "mobile",
+    "aadhaar_last4",
+    "bank_account",
+    "ifsc",
+    "annual_income"
+  ],
+  "source_url": "https://scholarship.up.gov.in/",
+  "verification": {
+    "status": "conflicting",
+    "note": "Income caps differ by source and category: ₹1 lakh to ₹2.5 lakh. We screen at ₹2 lakh; the portal decides by category."
+  },
+  "last_verified": "2026-11-02"
+}

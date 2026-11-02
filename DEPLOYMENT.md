@@ -9,7 +9,7 @@ The backend (FastAPI, Chromium, OCR) and the frontend (Next.js) run as two conta
 | [Docker on your machine](#docker) | Running it anywhere with one command | Yes |
 | [Tunnel](#share-it-with-a-tunnel) | A demo from your laptop, including the microphone on phones | No |
 | [One server](#one-server) | A URL that stays up | Containers yes, server and HTTPS no |
-| [Two hosting services](#two-hosting-services) | Platforms like Render, Railway, Fly or Vercel | Containers yes, platforms no |
+| [Two hosting services](#two-hosting-services) | A free public URL on Render and Vercel | Yes, on the free plans |
 
 ## Environment
 
@@ -84,9 +84,9 @@ The backend goes on Render and the frontend on Vercel. **Deploy the backend firs
 
 - **It sleeps.** After 15 minutes without visitors it stops, and the next visitor waits about a minute. Reminders and status checks don't run while it sleeps.
 - **Data doesn't last.** There is no disk, so a restart, redeploy or sleep returns to fresh demo data.
-- **It's slow.** It has 0.1 CPU and 512 MB. Reading a document took 145 s on 0.5 CPU, so expect document reading to fail on free, because Vercel gives up on a request after 120 s. Form filling runs a real browser and may fail too.
+- **It's slower.** It has 0.1 CPU and 512 MB. Measured on the live site, reading a document takes about 12 s and filling a form about 17 s. Chat replies usually take under 1 s.
 
-For reliable document reading, change `plan` to `1c-2g` and add a disk mounted at `/data`.
+`OCR_LOW_MEMORY` in `render.yaml` is what makes reading fit in 512 MB, using one thread and lighter models. For data that lasts and no sleeping, change `plan` to `1c-2g`, add a disk mounted at `/data`, and remove that setting.
 
 1. Open <https://render.com/deploy?repo=https://github.com/harshisingh777/entitled> and sign in.
 2. Apply the Blueprint. The first build takes several minutes.
@@ -135,7 +135,9 @@ Measured with the whole journey on a laptop, limiting only the backend. Reading 
 | 1 CPU, 512 MB | 30 s | 512 MiB, the limit itself | Passed, with no margin |
 | 0.5 CPU, 1 GB | 145 s | Not measured | One document read only, almost at the 150 s limit |
 
-**Use 2 CPU and 2 GB for a demo. 1 CPU and 1 GB is the minimum.** The frontend adds about 80 MB. Documents read with a Sarvam key would run off the server, but that has not been measured.
+These runs were before reading moved into its own process. On Render's free plan (0.1 CPU, 512 MB), the newer low-memory mode reads a document in about 12 s, and the whole journey passes.
+
+**Use 2 CPU and 2 GB if you run it without low-memory mode.** The frontend adds about 80 MB. Documents read with a Sarvam key would run off the server, but that has not been measured.
 
 ## Check that it works
 
@@ -177,10 +179,12 @@ These were run on a clean copy of the repo in Docker on Windows:
 
 A 5.9 MB photo was also uploaded through the app outside Docker. It was shrunk to 0.24 MB before sending and still read correctly.
 
+On Render's free plan with Vercel, the whole journey and every screen at 7 sizes also passed on the live site.
+
 These have **not** been tested:
 
-- The latest backend image, which hands a host's disk to its app user at startup. Docker wouldn't start for this check.
-- Any hosting platform, HTTPS proxy, Caddy or the tunnel.
+- A host's persistent disk, which the image hands to its app user at startup. The free plan has no disk, and Docker wouldn't start for this check.
+- Any other hosting platform, HTTPS proxy, Caddy or the tunnel.
 - A real microphone.
 - PostgreSQL.
 - Any live API key.

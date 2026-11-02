@@ -2,6 +2,7 @@
 import json
 import subprocess
 import sys
+import threading
 from datetime import timedelta
 
 from sqlalchemy.orm import Session
@@ -82,16 +83,23 @@ def plan_documents(db: Session, household: Household, results: list[dict], log: 
     return plan
 
 
+_document_saves = threading.Lock()
+
+
 def ocr_document(db: Session, household: Household, data: bytes, filename: str) -> dict:
     parsed = ocr.read_document(data, filename)
     applied = []
-    for key, value in {**parsed["fields"], **parsed["facts"]}.items():
-        set_fact(db, household, key, value, "document")
-        applied.append(key)
-    if parsed["doc_type"]:
-        set_fact(db, household, f"doc_{parsed['doc_type']}", True, "document")
-    audit(db, household.id, "ocr_document", {"file": "deleted after extraction", "engine": parsed["engine"]},
-          {"doc_type": parsed["doc_type"], "fields": applied})
+    # Reads run side by side, but saves take turns: two reads of one household would insert the same facts.
+    with _document_saves:
+        db.expire_all()
+        for key, value in {**parsed["fields"], **parsed["facts"]}.items():
+            set_fact(db, household, key, value, "document")
+            applied.append(key)
+        if parsed["doc_type"]:
+            set_fact(db, household, f"doc_{parsed['doc_type']}", True, "document")
+        audit(db, household.id, "ocr_document", {"file": "deleted after extraction", "engine": parsed["engine"]},
+              {"doc_type": parsed["doc_type"], "fields": applied})
+        db.commit()
     masked = dict(parsed["fields"])
     if "bank_account" in masked:
         masked["bank_account"] = mask_digits(masked["bank_account"])

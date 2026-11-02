@@ -1,0 +1,27 @@
+# docker compose up --build, then open http://localhost:3000
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - entitled-data:/data
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: frontend
+      args:
+        BACKEND_URL: http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  entitled-data:

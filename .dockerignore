@@ -1,0 +1,7 @@
+# Used by backend/Dockerfile. Only what the image needs gets in, so .env and local data never can.
+*
+!backend/app
+!backend/requirements.txt
+!schemes
+**/__pycache__
+**/*.pyc

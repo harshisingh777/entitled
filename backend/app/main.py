@@ -158,9 +158,10 @@ def set_document(household_id: str, doc_id: str, body: DocumentState, db: Sessio
 
 
 @app.post("/api/households/{household_id}/ocr")
-async def read_document(household_id: str, file: UploadFile = File(...), db: Session = Depends(get_db)):
+def read_document(household_id: str, file: UploadFile = File(...), db: Session = Depends(get_db)):
     household = _household(db, household_id)
-    data = await file.read(MAX_UPLOAD_BYTES + 1)
+    # Not async: reading a document takes seconds, and every other request would wait on it.
+    data = file.file.read(MAX_UPLOAD_BYTES + 1)
     if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(413, "Image is over 8 MB")
     extracted = tools.ocr_document(db, household, data, file.filename or "document.jpg")
@@ -261,8 +262,8 @@ def advance_time(body: Advance, db: Session = Depends(get_db)):
 
 
 @app.post("/api/voice/stt")
-async def speech_to_text(file: UploadFile = File(...)):
-    audio = await file.read(MAX_AUDIO_BYTES + 1)
+def speech_to_text(file: UploadFile = File(...)):
+    audio = file.file.read(MAX_AUDIO_BYTES + 1)
     if len(audio) > MAX_AUDIO_BYTES:
         raise HTTPException(413, "Recording is too long")
     started = time.perf_counter()

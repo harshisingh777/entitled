@@ -26,6 +26,8 @@ Press **Walk through Kamla Devi's case** for the demo, or **Open operator mode**
 
 Microphones only work on `localhost` or HTTPS, so to try voice on a phone over your network you need an HTTPS tunnel. Everything else works over plain LAN at `http://<your-ip>:3000`.
 
+To run it in Docker or put it on a server, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ## What it does
 
 | Step | What happens |
@@ -57,7 +59,7 @@ The labels were written by hand from the rule definitions, so they catch encodin
 
 ```bash
 cd backend
-python -m pytest tests            # 77 tests, including a real browser and real OCR run
+python -m pytest tests            # 78 tests, including a real browser and real OCR run
 python scripts/ui_check.py        # with both servers running
 ```
 

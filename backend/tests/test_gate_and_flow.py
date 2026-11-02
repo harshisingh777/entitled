@@ -1,4 +1,6 @@
 """The API with the browser agent stubbed. test_e2e.py runs the same journey with the real one."""
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -196,6 +198,24 @@ def test_ocr_fills_profile_and_never_keeps_full_aadhaar(client):
     assert facts["name"]["value"] == "Kamla Devi"
     assert facts["name"]["source"] == "document"
     assert "9999" not in response.text and "8888" not in response.text
+
+
+def test_documents_read_at_the_same_time_all_save(client, monkeypatch):
+    household_id = client.post("/api/households", json={}).json()["household"]["id"]
+    together = threading.Barrier(4)
+
+    def read(data, filename):
+        together.wait(timeout=20)
+        return {"doc_type": filename.removesuffix(".jpg"), "fields": {"name": "Kamla Devi", "district": "Raebareli"}, "facts": {}, "engine": "rapidocr"}
+    monkeypatch.setattr(tools.ocr, "read_document", read)
+
+    def upload(doc):
+        return client.post(f"/api/households/{household_id}/ocr", files={"file": (f"{doc}.jpg", b"image", "image/jpeg")}).status_code
+    with ThreadPoolExecutor(4) as pool:
+        statuses = list(pool.map(upload, ["aadhaar", "ration_card", "bank_passbook", "land_record"]))
+    assert statuses == [200, 200, 200, 200]
+    facts = {f["key"] for f in client.get(f"/api/households/{household_id}").json()["facts"]}
+    assert {"doc_aadhaar", "doc_ration_card", "doc_bank_passbook", "doc_land_record", "name", "district"} <= facts
 
 
 def test_ocr_reads_passbook_and_masks_the_account_on_screen(client):

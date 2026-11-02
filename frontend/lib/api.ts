@@ -81,6 +81,27 @@ function post<T>(path: string, data?: unknown): Promise<T> {
   });
 }
 
+const MAX_PHOTO_SIDE = 2000;
+const LARGE_PHOTO_BYTES = 1_500_000;
+
+/** Phone photos can exceed a host's upload limit, and reading them takes longer. This size still reads well. */
+async function shrinkPhoto(file: Blob): Promise<Blob> {
+  if (file.size <= LARGE_PHOTO_BYTES) return file;
+  try {
+    const image = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_PHOTO_SIDE / Math.max(image.width, image.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(image.width * scale);
+    canvas.height = Math.round(image.height * scale);
+    canvas.getContext("2d")!.drawImage(image, 0, 0, canvas.width, canvas.height);
+    image.close();
+    const smaller = await new Promise<Blob | null>((done) => canvas.toBlob(done, "image/jpeg", 0.85));
+    return smaller && smaller.size < file.size ? smaller : file;
+  } catch {
+    return file; // Formats the browser cannot decode go up as they are.
+  }
+}
+
 export const api = {
   config: () => request<ClientConfig>("/api/config"),
   createHousehold: (data: { village?: string; operator?: string; name?: string } = {}) => post<HouseholdState>("/api/households", data),
@@ -92,9 +113,9 @@ export const api = {
   editFact: (id: string, key: string, value: string) => request<HouseholdState>(`/api/households/${id}/facts/${key}`, {
     method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ value }),
   }),
-  ocr: (id: string, file: Blob, filename: string) => {
+  ocr: async (id: string, file: Blob, filename: string) => {
     const form = new FormData();
-    form.append("file", file, filename);
+    form.append("file", await shrinkPhoto(file), filename);
     return request<TurnResult & { extracted: { doc_type: string | null; fields: Record<string, string>; engine: string } }>(
       `/api/households/${id}/ocr`, { method: "POST", body: form });
   },

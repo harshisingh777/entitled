@@ -24,7 +24,7 @@ COPY schemes /srv/schemes
 RUN useradd --create-home --uid 10001 entitled \
     && mkdir /data \
     && chown entitled /data
-USER entitled
+ENV HOME=/home/entitled
 VOLUME /data
 
 EXPOSE 8000
@@ -34,5 +34,6 @@ HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
 
 # Hosts usually assign PORT. The form agent reaches the portal through BACKEND_PORT, so the two must agree.
 # One worker only: each worker would run its own status poller.
+# Hosts mount their disks owned by root, so it starts as root only to hand /data over, then drops to the app user.
 ENV BACKEND_PORT=8000
-CMD ["sh", "-c", "export BACKEND_PORT=${PORT:-$BACKEND_PORT}; exec python -m uvicorn app.main:app --host 0.0.0.0 --port $BACKEND_PORT --workers 1"]
+CMD ["sh", "-c", "export BACKEND_PORT=${PORT:-$BACKEND_PORT}; run=\"python -m uvicorn app.main:app --host 0.0.0.0 --port $BACKEND_PORT --workers 1\"; if [ \"$(id -u)\" = 0 ]; then chown -R entitled /data; exec setpriv --reuid=entitled --regid=entitled --init-groups $run; fi; exec $run"]

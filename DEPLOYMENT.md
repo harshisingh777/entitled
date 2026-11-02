@@ -76,28 +76,45 @@ Allow ports 80 and 443 in the firewall, and don't open port 3000 to the internet
 
 ## Two hosting services
 
-**Deploy the backend first**, because the frontend needs its URL when it builds.
+The backend goes on Render and the frontend on Vercel. **Deploy the backend first**, because the frontend needs its URL when it builds.
 
-**Backend**
+### Backend on Render
 
-| Setting | Value |
-|---|---|
-| Dockerfile | `backend/Dockerfile` |
-| Build context | Repo root, because it also needs `schemes/` |
-| Disk | Persistent, mounted at `/data` |
-| Environment | `CONFIRMATION_SECRET`, plus any keys |
-| Health check | `/api/health` |
-| Instances | Exactly 1 |
+Render's free plan won't work: it has no disk and only 0.1 CPU, and Vercel gives up on a request after 120 s. [`render.yaml`](render.yaml) asks for 1 CPU, 2 GB and a 1 GB disk, about $25.25 a month by Render's published rates. Render shows the exact price before you confirm.
 
-**Frontend**
+1. Open <https://render.com/deploy?repo=https://github.com/harshisingh777/entitled> and sign in.
+2. Review the plan and price, then apply the Blueprint. The first build takes several minutes.
+3. Copy the service's URL and check it:
 
-| Setting | Value |
-|---|---|
-| Dockerfile | `frontend/Dockerfile` |
-| Build context | `frontend` |
-| Build argument | `BACKEND_URL=https://your-backend.example.com` |
+```bash
+curl https://your-backend.onrender.com/api/health
+```
 
-On Vercel, set the root directory to `frontend` and add `BACKEND_URL` as an environment variable instead. Vercel uses its own proxy limits, not the 150 s set in `next.config.mjs`, so check that document reading finishes in time.
+### Frontend on Vercel
+
+From the repo root, sign in once, then deploy with your Render URL:
+
+```bash
+npx vercel login
+```
+
+```bash
+npx vercel deploy frontend --prod --build-env BACKEND_URL=https://your-backend.onrender.com
+```
+
+Run the deploy command again after any frontend change. Vercel's free Hobby plan is for non-commercial use.
+
+### Other hosts
+
+| Setting | Backend | Frontend |
+|---|---|---|
+| Dockerfile | `backend/Dockerfile` | `frontend/Dockerfile` |
+| Build context | Repo root, because it also needs `schemes/` | `frontend` |
+| Build argument | | `BACKEND_URL=https://your-backend.example.com` |
+| Disk | Persistent, mounted at `/data` | |
+| Environment | `CONFIRMATION_SECRET`, plus any keys | |
+| Health check | `/api/health` | |
+| Instances | Exactly 1 | |
 
 Choose a backend plan that allows the image size, about 2.7 GB. A host that sleeps when idle will make the first visitor wait, and without a persistent disk every restart returns to fresh demo data.
 
@@ -133,7 +150,8 @@ python scripts/ui_check.py
 | What you see | Likely cause | Fix |
 |---|---|---|
 | Pages load, but every action fails with a 500 | Wrong `BACKEND_URL`, or it was set after the build | Correct it and rebuild the frontend |
-| Backend exits with `PermissionError` on `/data` | The disk is owned by root, and the image runs as user ID 10001 | Give that user write access to the disk |
+| Backend exits with `PermissionError` on `/data` | The image hands the disk to its app user at startup, and the host blocked that | Give user ID 10001 write access to the disk |
+| Reading a document fails after 120 s on Vercel | The backend's CPU is too small | Use at least 1 CPU |
 | Reading a document fails after 150 s | The server is too small | Use at least 1 CPU |
 | Form filling fails | Not enough memory for Chromium, or `BACKEND_PORT` differs from the port in use | Check memory. Prefer setting `PORT` alone |
 | Data disappears on restart | No persistent disk at `/data` | Attach one |
@@ -151,8 +169,11 @@ These were run on a clean copy of the repo in Docker on Windows:
 - A host-assigned port on both containers.
 - `.env` and local data staying out of the backend image.
 
+A 5.9 MB photo was also uploaded through the app outside Docker. It was shrunk to 0.24 MB before sending and still read correctly.
+
 These have **not** been tested:
 
+- The latest backend image, which hands a host's disk to its app user at startup. Docker wouldn't start for this check.
 - Any hosting platform, HTTPS proxy, Caddy or the tunnel.
 - A real microphone.
 - PostgreSQL.

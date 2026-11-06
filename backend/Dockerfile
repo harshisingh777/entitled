@@ -9,7 +9,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /srv/backend
 
-# libgl1 and libglib2.0-0 are what RapidOCR's OpenCV needs. Playwright brings Chromium's own libraries.
+# libgl1 and libglib2.0-0 are what OpenCV, under UniOCR, can need. Playwright brings Chromium's own libraries.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
@@ -20,6 +20,8 @@ RUN pip install -r requirements.txt \
 
 COPY backend/app ./app
 COPY schemes /srv/schemes
+# UniOCR's model bundle. The frontend serves this same file to phones, so the repo keeps one copy, in the frontend.
+COPY frontend/public/models/uniocr_mobile.bin /srv/frontend/public/models/uniocr_mobile.bin
 
 RUN useradd --create-home --uid 10001 entitled \
     && mkdir /data \

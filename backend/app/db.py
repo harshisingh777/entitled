@@ -9,6 +9,9 @@ from sqlalchemy.pool import StaticPool
 from . import config
 
 _kwargs = {}
+if not config.DATABASE_URL.startswith("sqlite"):
+    # Managed databases close idle connections. Checking first turns a dead connection into a fresh one, not an error.
+    _kwargs.update(pool_pre_ping=True, pool_recycle=300, pool_size=5, max_overflow=5)
 if config.DATABASE_URL.startswith("sqlite"):
     _kwargs["connect_args"] = {"check_same_thread": False}
     if ":memory:" in config.DATABASE_URL:

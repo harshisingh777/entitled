@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FileStack, FileText, MessageCircle, ScrollText, UserRound, Volume2, VolumeX } from "lucide-react";
-import { api, ClientConfig, HouseholdState, inr, Text2, TurnResult } from "@/lib/api";
+import { api, ApiError, ClientConfig, errorMessage, HouseholdState, inr, onWaiting, Text2, TurnResult } from "@/lib/api";
 import { readPref, writePref } from "@/lib/prefs";
 import { useVoice } from "@/lib/voice";
 import { Brand } from "./Brand";
@@ -18,12 +18,15 @@ export type Tab = "chat" | "schemes" | "documents" | "applications" | "profile";
 
 export default function Workspace({ id }: { id: string }) {
   const demo = useSearchParams().get("demo") === "kamla";
+  const router = useRouter();
   const [state, setState] = useState<HouseholdState | null>(null);
   const [config, setConfig] = useState<ClientConfig | null>(null);
   const [tab, setTab] = useState<Tab>("chat");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [gone, setGone] = useState(false);
+  const [restarting, setRestarting] = useState(false);
   const [autoSpeak, setAutoSpeak] = useState(true);
   const resumed = useRef(false);
 
@@ -31,8 +34,31 @@ export default function Workspace({ id }: { id: string }) {
     writePref("entitled.household", id);
     setAutoSpeak(readPref("entitled.speak") !== "off");
     api.config().then(setConfig).catch(() => setConfig({ voice: { server: [], mode: "browser" }, llm: false, ocr: "", sms: "", schemes: 0 }));
-    api.household(id).then(setState).catch(() => setLoadFailed(true));
+    api.household(id).then(setState).catch((error) => {
+      if (error instanceof ApiError && error.kind === "gone") setGone(true);
+      else setLoadError(errorMessage(error));
+    });
   }, [id]);
+
+  useEffect(() => onWaiting((waiting) => {
+    if (!waiting) return;
+    setNotice(waiting.reason === "waking"
+      ? "Waking up the server. The free server sleeps when nobody uses it, so this can take up to a minute…"
+      : "The server is finishing another document or form. Waiting for it…");
+  }), []);
+
+  const startAgain = useCallback(async () => {
+    setRestarting(true);
+    try {
+      const fresh = await api.createHousehold();
+      writePref("entitled.household", fresh.household.id);
+      router.replace(`/h/${fresh.household.id}${demo ? "?demo=kamla" : ""}`);
+    } catch (error) {
+      setLoadError(errorMessage(error));
+      setGone(false);
+      setRestarting(false);
+    }
+  }, [demo, router]);
 
   const voiceError = useCallback((code: string) => {
     const messages: Record<string, string> = {
@@ -63,8 +89,9 @@ export default function Workspace({ id }: { id: string }) {
       const result = await work();
       if ("reply" in result) applyTurn(result);
       else setState(result);
-    } catch {
-      setNotice("The server did not respond. Please try again.");
+    } catch (error) {
+      if (error instanceof ApiError && error.kind === "gone") setGone(true);
+      else setNotice(errorMessage(error));
     } finally {
       setBusy(false);
     }
@@ -106,12 +133,29 @@ export default function Workspace({ id }: { id: string }) {
     if (!next) voice.stopSpeaking();
   };
 
-  if (loadFailed) {
+  if (gone) {
     return (
-      <div className="center-note">
-        <h1>Household not found</h1>
-        <p>The link may be old, or the server may be down.</p>
-        <Link className="btn btn-primary" href="/">Go to start</Link>
+      <div className="center-note" role="alert">
+        <h1>This conversation was cleared</h1>
+        <p>The free demo server forgets everything when it restarts or sleeps, and this household went with it. Start again and it takes a minute to catch up.</p>
+        <div className="actions">
+          <button type="button" className="btn btn-primary" disabled={restarting} onClick={() => void startAgain()}>
+            {restarting ? "Starting…" : demo ? "Start Kamla Devi's case again" : "Start a new conversation"}
+          </button>
+          <Link className="btn btn-quiet" href="/">Go to start</Link>
+        </div>
+      </div>
+    );
+  }
+  if (loadError) {
+    return (
+      <div className="center-note" role="alert">
+        <h1>Could not open this household</h1>
+        <p>{loadError}</p>
+        <div className="actions">
+          <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>Try again</button>
+          <Link className="btn btn-quiet" href="/">Go to start</Link>
+        </div>
       </div>
     );
   }

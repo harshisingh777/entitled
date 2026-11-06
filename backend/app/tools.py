@@ -7,7 +7,7 @@ from datetime import timedelta
 
 from sqlalchemy.orm import Session
 
-from . import clock, config, gate, ocr, portal
+from . import clock, config, gate, jobs, ocr, portal
 from .db import Application, AuditLog, Fact, Household, Notification, Reminder, StatusEvent
 from .engine import documents as doc_engine
 from .engine import planner, rules
@@ -87,7 +87,11 @@ _document_saves = threading.Lock()
 
 
 def ocr_document(db: Session, household: Household, data: bytes, filename: str) -> dict:
-    parsed = ocr.read_document(data, filename)
+    return save_document(db, household, ocr.read_document(data, filename))
+
+
+def save_document(db: Session, household: Household, parsed: dict) -> dict:
+    """Stores what a document showed. Used for photos read here and for text read on the person's own phone."""
     applied = []
     # Reads run side by side, but saves take turns: two reads of one household would insert the same facts.
     with _document_saves:
@@ -142,7 +146,7 @@ def _sync_fields(app: Application, household: Household) -> bool:
 
 
 def _agent_process(job: dict) -> dict:
-    with ocr.heavy_job:
+    with jobs.heavy():
         process = subprocess.run(
             [sys.executable, "-m", "app.form_agent"], input=json.dumps(job, ensure_ascii=False).encode("utf-8"),
             capture_output=True, cwd=str(config.BACKEND), timeout=120,

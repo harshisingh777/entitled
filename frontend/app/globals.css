@@ -233,6 +233,10 @@ small { font-size: 14px; }
 /* Documents */
 .upload-box { display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
 .sample-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.reading-status { margin: 0; color: var(--ink-2); font-size: 15px; }
+.device-note { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--ok); font-size: 15px; font-weight: 600; }
+.center-note .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.center-note p { max-width: 34rem; }
 .extracted { display: grid; gap: 4px; padding: 10px 12px; background: var(--ok-soft); border-radius: var(--radius-sm); font-size: 16px; }
 .extracted > div { display: flex; justify-content: space-between; gap: 12px; }
 .extracted dt { color: var(--ink-2); }

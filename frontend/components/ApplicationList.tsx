@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Ban, Check, CircleCheck, FastForward, FileDown, MessageSquareText, Play, ShieldAlert } from "lucide-react";
-import { api, ApiError, Application, HouseholdState, Text2 } from "@/lib/api";
+import { api, ApiError, Application, errorMessage, HouseholdState, Text2 } from "@/lib/api";
 
 const STEPS: { status: string; label: string }[] = [
   { status: "submitted", label: "Submitted" },
@@ -56,7 +56,7 @@ export function ConfirmCard({ application, busy, onConfirm, onNotice }: { applic
       await api.submitWithoutConfirmation(application.id);
     } catch (error) {
       if (error instanceof ApiError && error.status === 403) setRefusal((error.body as Text2).en);
-      else setRefusal("The server did not respond.");
+      else setRefusal(errorMessage(error));
     }
   }
 

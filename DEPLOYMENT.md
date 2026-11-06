@@ -32,7 +32,7 @@ Generate a secret with:
 openssl rand -hex 32
 ```
 
-`DATABASE_URL` can point at PostgreSQL, but that path has not been tested and the image has no PostgreSQL driver. Keep SQLite and run **one backend instance only**. Each extra instance would run its own status poller, and SQLite lives on one disk.
+`DATABASE_URL` can point at PostgreSQL, and the image includes the driver. URLs as hosts give them, starting `postgres://` or `postgresql://`, work unchanged. The whole test suite passes on PostgreSQL 16. Run **one backend instance only** either way, because each extra instance would run its own status poller.
 
 ## Docker
 
@@ -82,11 +82,21 @@ The backend goes on Render and the frontend on Vercel. **Deploy the backend firs
 
 [`render.yaml`](render.yaml) uses Render's [free plan](https://render.com/docs/free). It costs nothing, but has limits:
 
-- **It sleeps.** After 15 minutes without visitors it stops, and the next visitor waits about a minute. Reminders and status checks don't run while it sleeps.
-- **Data doesn't last.** There is no disk, so a restart, redeploy or sleep returns to fresh demo data.
-- **It's slower.** It has 0.1 CPU and 512 MB. Measured on the live site, reading a document takes about 12 s and filling a form about 17 s. Chat replies usually take under 1 s.
+- **It sleeps.** After 15 minutes without visitors it stops, and the next visitor waits about a minute. The page retries on its own and says it is waking the server. A [keep-alive workflow](.github/workflows/keep-alive.yml) visits every 10 minutes to prevent this, and one service running all month fits the free 750 hours. GitHub can delay scheduled runs, so it lowers the odds rather than ruling a sleep out.
+- **Data doesn't last, unless you add a database.** There is no disk, so a restart, redeploy or sleep returns to fresh demo data. A page whose household was lost says so and offers to start again. To keep data, [add a free PostgreSQL database](#keep-data-across-restarts).
+- **It's slower.** It has 0.1 CPU and 512 MB. Phones read documents themselves, in 3 to 4 s. When the server reads one instead, it takes 24 to 30 s, or about 40 s for a Hindi document. Filling a form takes about 22 s. Chat replies usually take under 1 s.
 
-`OCR_LOW_MEMORY` in `render.yaml` is what makes reading fit in 512 MB, using one thread and lighter models. For data that lasts and no sleeping, change `plan` to `1c-2g`, add a disk mounted at `/data`, and remove that setting.
+`OCR_LOW_MEMORY` in `render.yaml` is what makes reading fit in 512 MB, using one thread and a 960 px detection size. With it, the whole journey peaked at 382 MiB in a container limited to 512 MB and 0.1 CPU, and the heaviest single step, a Hindi read, at 346 MiB. Reading and form filling take turns in one slot. A request that waits more than 45 s gets "busy, try again" with `Retry-After`, and the page retries it.
+
+For no sleeping and more speed, change `plan` to `1c-2g` and remove `OCR_LOW_MEMORY`.
+
+### Keep data across restarts
+
+1. Create a free PostgreSQL database, for example on [Neon](https://neon.tech), and copy its connection URL.
+2. In the Render dashboard, open the service, then **Environment**, and set `DATABASE_URL` to that URL.
+3. Render redeploys. The tables and the 30 demo households are created on first start, and only once.
+
+The time-skip buttons then move a clock that is also kept, so reset the database between demos if you need a clean one.
 
 1. Open <https://render.com/deploy?repo=https://github.com/harshisingh777/entitled> and sign in.
 2. Apply the Blueprint. The first build takes several minutes.
@@ -122,7 +132,7 @@ Run the deploy command again after any frontend change. Vercel's free Hobby plan
 | Health check | `/api/health` | |
 | Instances | Exactly 1 | |
 
-Choose a backend plan that allows the image size, about 2.7 GB. A host that sleeps when idle will make the first visitor wait, and without a persistent disk every restart returns to fresh demo data.
+Choose a backend plan that allows the image size, about 2.9 GB. A host that sleeps when idle will make the first visitor wait, and without a persistent disk every restart returns to fresh demo data.
 
 ## How big a server
 
@@ -159,6 +169,10 @@ python scripts/ui_check.py
 |---|---|---|
 | Pages load, but every action fails with a 500 | Wrong `BACKEND_URL`, or it was set after the build | Correct it and rebuild the frontend |
 | Backend exits with `PermissionError` on `/data` | The image hands the disk to its app user at startup, and the host blocked that | Give user ID 10001 write access to the disk |
+| "This conversation was cleared" | The free server restarted or slept, and had no database | Start again, and set `DATABASE_URL` to keep data |
+| "Waking up the server" for about a minute | The free server was asleep | Wait. The keep-alive workflow makes this rare |
+| "The server is busy" | Another document read or form fill held the slot for 45 s | The page retries on its own. Use a bigger plan if it is common |
+| Documents always say "Reading on the server" | The browser is old, data saver is on, the connection is slower than 4G, or reading on the device failed once this visit | Expected. The server reads them instead |
 | Reading a document fails after 120 s on Vercel | The backend's CPU is too small | Use at least 1 CPU |
 | Reading a document fails after 150 s | The server is too small | Use at least 1 CPU |
 | Form filling fails | Not enough memory for Chromium, or `BACKEND_PORT` differs from the port in use | Check memory. Prefer setting `PORT` alone |
@@ -186,5 +200,5 @@ These have **not** been tested:
 - A host's persistent disk, which the image hands to its app user at startup. The free plan has no disk, and Docker wouldn't start for this check.
 - Any other hosting platform, HTTPS proxy, Caddy or the tunnel.
 - A real microphone.
-- PostgreSQL.
+- A hosted PostgreSQL such as Neon. The test suite passed on PostgreSQL 16 in Docker.
 - Any live API key.

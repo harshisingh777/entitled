@@ -71,7 +71,7 @@ def test_kamla_demo_from_first_words_to_money(api):
 
     for name in ("ration_card.jpg", "aadhaar.jpg", "passbook.jpg"):
         extracted = upload(api, household_id, name)["extracted"]
-        assert extracted["doc_type"] and extracted["engine"] == "rapidocr"
+        assert extracted["doc_type"] and extracted["engine"] == "uniocr"
 
     # Answer whatever is still open on the checklist, then let the agent run the form.
     replies = {"guardian_name": "रमेश कुमार", "mobile": "9876543210", "address": "ग्राम बछरावां"}

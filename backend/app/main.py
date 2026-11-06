@@ -1,21 +1,29 @@
 """HTTP API for the Entitled PWA, plus the mock portal."""
 import base64
+import logging
 import os
 import time
+import uuid
 from contextlib import asynccontextmanager
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi import Depends, FastAPI, File, Header, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Header, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from . import agent, clock, config, gate, llm, nlu, ocr, portal, tools, views, voice
+from . import agent, clock, config, gate, jobs, llm, nlu, ocr, portal, tools, views, voice
 from .db import Application, Household, SessionLocal, init_db
 from .engine.rules import load_catalog, load_schemes
 from .seed import create_household, seed_operator_households
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+log = logging.getLogger("entitled")
+for _noisy in ("httpx", "apscheduler"):
+    logging.getLogger(_noisy).setLevel(logging.WARNING)
 
 MAX_UPLOAD_BYTES = 8 * 1024 * 1024
 MAX_AUDIO_BYTES = 12 * 1024 * 1024
@@ -46,6 +54,32 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="Entitled", version="1.0.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?", allow_methods=["*"], allow_headers=["*"])
+
+
+@app.middleware("http")
+async def request_log(request: Request, call_next):
+    """One line per API request, with an id the person can quote and that matches the log."""
+    request_id = request.headers.get("x-request-id", "")[:64] or uuid.uuid4().hex[:12]
+    started = time.perf_counter()
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    if request.url.path.startswith("/api/") and request.url.path != "/api/health":
+        log.info("%s %s %s %dms id=%s", request.method, request.url.path, response.status_code,
+                 (time.perf_counter() - started) * 1000, request_id)
+    return response
+
+
+@app.exception_handler(jobs.Busy)
+async def busy(_: Request, exc: jobs.Busy):
+    return JSONResponse(status_code=503, headers={"Retry-After": str(exc.retry_after)}, content={"code": "busy", "en": exc.en})
+
+
+@app.exception_handler(Exception)
+async def unexpected(request: Request, exc: Exception):
+    # Never a bare 500: the page shows these words, and the log keeps the details.
+    log.exception("unhandled error on %s %s", request.method, request.url.path)
+    return JSONResponse(status_code=500, content={"code": "server_error", "en": "Something went wrong on the server. Please try again."})
 app.mount("/static", StaticFiles(directory=config.STATIC_DIR), name="static")
 app.include_router(portal.router)
 
@@ -104,14 +138,16 @@ class Advance(BaseModel):
 
 
 @app.get("/api/health")
-def health():
+def health(db: Session = Depends(get_db)):
+    # Also proves the database answers, so a host restarts a server that is up but cannot work.
+    db.execute(text("SELECT 1"))
     return {"status": "ok"}
 
 
 @app.get("/api/config")
 def client_config():
     return {
-        "voice": voice.providers(), "llm": llm.available(), "ocr": "sarvam_vision" if config.SARVAM_API_KEY else "rapidocr",
+        "voice": voice.providers(), "llm": llm.available(), "ocr": "sarvam_vision" if config.SARVAM_API_KEY else ocr.LOCAL_ENGINE,
         "sms": "twilio" if config.TWILIO_ACCOUNT_SID else "simulated", "schemes": len(load_schemes()),
         "commit": os.environ.get("RENDER_GIT_COMMIT", "")[:7],
     }
@@ -165,12 +201,43 @@ def read_document(household_id: str, file: UploadFile = File(...), db: Session =
     # Not async: reading a document takes seconds, and every other request would wait on it.
     data = file.file.read(MAX_UPLOAD_BYTES + 1)
     if len(data) > MAX_UPLOAD_BYTES:
-        raise HTTPException(413, "Image is over 8 MB")
-    extracted = tools.ocr_document(db, household, data, file.filename or "document.jpg")
-    del data
-    if extracted["doc_type"] is None:
+        raise HTTPException(413, "The file is over 8 MB. Please send a smaller photo.")
+    try:
+        extracted = tools.ocr_document(db, household, data, file.filename or "document.jpg")
+    except ocr.UnreadableFile as unreadable:
+        extracted = {"doc_type": None, "fields": {}, "facts": {}, "engine": ocr.LOCAL_ENGINE, "image_stored": False}
+        return _document_reply(db, household, extracted, unreadable.en)
+    finally:
+        del data
+    return _document_reply(db, household, extracted)
+
+
+class ReadOnDevice(BaseModel):
+    rows: list[str] = Field(max_length=200)
+
+
+@app.post("/api/households/{household_id}/ocr/text")
+def read_document_text(household_id: str, body: ReadOnDevice, db: Session = Depends(get_db)):
+    """Text a phone read from a photo with UniOCR. The photo itself never reaches us."""
+    household = _household(db, household_id)
+    rows = [row[:300] for row in body.rows if row.strip()]
+    parsed = ocr.parse_rows(rows)
+    if parsed["doc_type"] is None:
+        # Nothing is saved or said: the phone sends the photo here instead, where the Hindi reader can try.
+        return {"needs_image": True}
+    parsed["engine"] = "uniocr_device"
+    return _document_reply(db, household, tools.save_document(db, household, parsed))
+
+
+def _document_reply(db: Session, household: Household, extracted: dict, problem: str | None = None) -> dict:
+    if problem:
+        hi = en = problem
+    elif extracted["doc_type"] is None:
         hi = "यह दस्तावेज़ पढ़ नहीं पाई। साफ़ रोशनी में दोबारा फ़ोटो लीजिए।"
         en = "I could not read this document. Please take another photo in good light."
+    elif extracted["engine"] == "uniocr_device":
+        hi = "आपके फ़ोन पर ही दस्तावेज़ पढ़ लिया, जानकारी भर दी। फ़ोटो फ़ोन से बाहर नहीं गई।"
+        en = "Read on your phone and details filled in. The photo never left your phone."
     else:
         hi = "दस्तावेज़ पढ़ लिया, जानकारी भर दी। फ़ोटो रखी नहीं गई।"
         en = "Document read and details filled in. The photo was not kept."

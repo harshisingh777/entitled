@@ -10,6 +10,11 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 VIEWPORT = {"width": 820, "height": 900}
+# A small server has little memory and a 64 MB /dev/shm in containers. These keep Chromium to one lean renderer.
+LEAN_CHROMIUM = [
+    "--disable-dev-shm-usage", "--disable-gpu", "--disable-extensions", "--disable-background-networking",
+    "--disable-component-update", "--disable-sync", "--mute-audio", "--no-first-run", "--renderer-process-limit=1",
+]
 
 
 def fill(page, job: dict) -> dict:
@@ -43,7 +48,7 @@ def pdf(page, job: dict) -> dict:
 def main() -> None:
     job = json.loads(sys.stdin.read())
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=True, args=LEAN_CHROMIUM)
         page = browser.new_page(viewport=VIEWPORT)
         result = fill(page, job) if job["action"] == "fill" else pdf(page, job)
         browser.close()

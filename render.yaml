@@ -1,5 +1,6 @@
 # The Entitled backend on Render's free plan. The frontend goes on Vercel: see DEPLOYMENT.md.
-# Free has no disk, so every restart returns to fresh demo data.
+# Free has no disk. Without DATABASE_URL every restart returns to fresh demo data; with a free PostgreSQL URL
+# (Neon, Supabase or similar) households survive restarts and sleeps. See DEPLOYMENT.md.
 services:
   - type: web
     name: entitled-backend
@@ -15,3 +16,6 @@ services:
         generateValue: true
       - key: OCR_LOW_MEMORY
         value: "1"
+      # Optional. Paste a PostgreSQL URL in the Render dashboard to keep data across restarts.
+      - key: DATABASE_URL
+        sync: false

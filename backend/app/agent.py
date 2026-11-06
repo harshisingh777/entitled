@@ -10,7 +10,7 @@ from typing import TypedDict
 from langgraph.graph import END, START, StateGraph
 from sqlalchemy.orm import Session
 
-from . import clock, gate, llm, nlu, tools
+from . import clock, gate, jobs, llm, nlu, tools
 from .db import Application, Household, Message, SessionSummary
 from .engine import documents as doc_engine
 from .engine.planner import answer_facts
@@ -294,6 +294,11 @@ def form(state: AgentState) -> dict:
     name = load_schemes()[scheme_id]["name"]
     try:
         tools.fill_form(db, household, app)
+    except jobs.Busy:
+        tools.audit(db, household.id, "fill_form", {"scheme": scheme_id}, {"error": "busy"}, outcome="failed")
+        _say(state, "सर्वर अभी दूसरा काम कर रहा है। एक मिनट बाद बोलिए: फॉर्म भरो।",
+             "The server is busy with another document or form. Please say: fill the form, again in a minute.")
+        return {"route": "end"}
     except Exception as exc:  # The browser agent runs apart from us, and any failure there must reach the person as words.
         tools.audit(db, household.id, "fill_form", {"scheme": scheme_id}, {"error": str(exc)[:300]}, outcome="failed")
         _say(state, "फॉर्म भरने में दिक़्क़त आई। फिर से बोलिए: फॉर्म भरो।", "Filling the form failed. Please say: fill the form, to try again.")

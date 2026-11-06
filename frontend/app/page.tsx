@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowRight, Mic, RotateCcw, UsersRound } from "lucide-react";
 import { Brand } from "@/components/Brand";
-import { api } from "@/lib/api";
+import { api, errorMessage, onWaiting } from "@/lib/api";
 import { readPref, writePref } from "@/lib/prefs";
 
 const STEPS = [
@@ -20,20 +20,27 @@ const STEPS = [
 export default function Home() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
   const [lastId, setLastId] = useState<string | null>(null);
+  const [waking, setWaking] = useState(false);
 
-  useEffect(() => setLastId(readPref("entitled.household")), []);
+  useEffect(() => onWaiting((waiting) => setWaking(waiting?.reason === "waking")), []);
+
+  useEffect(() => {
+    setLastId(readPref("entitled.household"));
+    // Wakes a sleeping free server while the person reads the page, so their first tap is quick.
+    api.health().catch(() => undefined);
+  }, []);
 
   async function start(demo: boolean) {
     setBusy(true);
-    setFailed(false);
+    setFailed(null);
     try {
       const state = await api.createHousehold();
       writePref("entitled.household", state.household.id);
       router.push(`/h/${state.household.id}${demo ? "?demo=kamla" : ""}`);
-    } catch {
-      setFailed(true);
+    } catch (error) {
+      setFailed(errorMessage(error));
       setBusy(false);
     }
   }
@@ -63,7 +70,8 @@ export default function Home() {
               </Link>
             )}
           </div>
-          {failed && <p className="error-text" role="alert">Could not reach the server. Please try again shortly.</p>}
+          {waking && busy && <p className="muted" role="status">Waking up the server. The free server sleeps when nobody uses it, so this can take up to a minute…</p>}
+          {failed && <p className="error-text" role="alert">{failed}</p>}
         </section>
 
         <aside className="story" aria-label="Kamla Devi's story">

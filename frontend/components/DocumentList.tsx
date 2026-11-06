@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Camera, Check, MapPin, Timer, Unlock, X } from "lucide-react";
+import { Camera, Check, MapPin, ShieldCheck, Timer, Unlock, X } from "lucide-react";
 import { api, HouseholdState, TurnResult } from "@/lib/api";
+import { readDocument } from "@/lib/readDocument";
 
 const SAMPLES = [
   { file: "ration_card.jpg", label: "Ration card" },
@@ -27,10 +28,14 @@ export function DocumentList({ id, state, busy, run }: Props) {
   const [extracted, setExtracted] = useState<Record<string, string> | null>(null);
   const { items, total, have, missing, requested_across_schemes: requested } = state.documents;
 
+  const [reading, setReading] = useState<string | null>(null);
+  const [onDevice, setOnDevice] = useState(false);
+
   async function read(source: Blob | (() => Promise<Blob>), filename: string) {
     await run(async () => {
       const blob = typeof source === "function" ? await source() : source;
-      const result = await api.ocr(id, blob, filename);
+      const result = await readDocument(id, blob, filename, setReading);
+      setOnDevice(result.extracted.engine === "uniocr_device");
       setExtracted((current) => ({ ...current, ...result.extracted.fields }));
       return result;
     });
@@ -44,18 +49,22 @@ export function DocumentList({ id, state, busy, run }: Props) {
     <div className="stack">
       <section className="upload-box">
         <h2 className="section-title">Send a document photo</h2>
-        <p className="muted">Details fill in by themselves. The photo is not kept, and only the last 4 Aadhaar digits are stored.</p>
-        <input ref={fileRef} type="file" accept="image/*" capture="environment" hidden aria-label="Document photo"
+        <p className="muted">Details fill in by themselves. Where the phone can, it reads the photo itself and the photo never leaves it. Only the last 4 Aadhaar digits are stored.</p>
+        <input ref={fileRef} type="file" accept="image/*,application/pdf,.pdf" hidden aria-label="Document photo or PDF"
           onChange={(event) => { const file = event.target.files?.[0]; if (file) void read(file, file.name); event.target.value = ""; }} />
         <button type="button" className="btn btn-primary" disabled={busy} onClick={() => fileRef.current?.click()}>
           <Camera size={20} aria-hidden="true" /> Take or choose a photo
         </button>
+        {reading && <p className="reading-status" role="status">{reading}</p>}
         <div className="sample-row">
           <span className="muted">Demo samples:</span>
           {SAMPLES.map((item) => (
             <button key={item.file} type="button" className="chip" disabled={busy} onClick={() => void sample(item.file)}>{item.label}</button>
           ))}
         </div>
+        {extracted && onDevice && !reading && (
+          <p className="device-note"><ShieldCheck size={16} aria-hidden="true" /> Read on this device with UniOCR. The photo never left it.</p>
+        )}
         {extracted && (
           <dl className="extracted" aria-live="polite">
             {Object.entries(extracted).map(([key, value]) => (

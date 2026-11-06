@@ -3,5 +3,6 @@
 !backend/app
 !backend/requirements.txt
 !schemes
+!frontend/public/models/uniocr_mobile.bin
 **/__pycache__
 **/*.pyc

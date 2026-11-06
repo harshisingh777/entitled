@@ -1,5 +1,7 @@
 // Keeps the app shell available on patchy networks. API responses hold family data and are never cached.
-const CACHE = "entitled-v1";
+const CACHE = "entitled-v2";
+// The on-device reader keeps its model in its own cache (see public/ocr/worker.js). A 27 MB download is never thrown away here.
+const KEEP = (key) => key === CACHE || key.startsWith("entitled-ocr-");
 const SHELL = ["/", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
@@ -9,7 +11,7 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))
+      .then((keys) => Promise.all(keys.filter((key) => !KEEP(key)).map((key) => caches.delete(key))))
       .then(() => self.clients.claim()),
   );
 });
@@ -19,11 +21,14 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET" || url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/portal/")) return;
 
-  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/")) {
+  // /ort/ holds ONNX Runtime, versioned with the app's dependencies, so reading on the device also works offline.
+  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/") || url.pathname.startsWith("/ort/")) {
     event.respondWith(
       caches.match(event.request).then((hit) => hit || fetch(event.request).then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+        }
         return response;
       })),
     );

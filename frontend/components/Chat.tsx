@@ -5,6 +5,7 @@ import { Camera, LoaderCircle, Mic, Send, Square, Volume2 } from "lucide-react";
 import { api, HouseholdState, TurnResult } from "@/lib/api";
 import type { ListenState } from "@/lib/voice";
 import { ConfirmCard } from "./ApplicationList";
+import { readDocument } from "@/lib/readDocument";
 
 export const KAMLA_INTRO = "My name is Kamla Devi, I am a 58 year old widow, I live in a village in Raebareli. I have a BPL card. My son has 1.2 acres of land and my granddaughter is 6 years old. Our yearly income is 40 thousand.";
 
@@ -66,7 +67,7 @@ export default function Chat({ id, state, busy, demo, notice, voice, onSend, onC
 
   function upload(file: File | undefined) {
     if (!file) return;
-    void run(() => api.ocr(id, file, file.name));
+    void run(() => readDocument(id, file, file.name, onNotice));
     if (fileRef.current) fileRef.current.value = "";
   }
 
@@ -113,7 +114,7 @@ export default function Chat({ id, state, busy, demo, notice, voice, onSend, onC
           </div>
         )}
         <form className="composer-row" onSubmit={submit}>
-          <input ref={fileRef} type="file" accept="image/*" capture="environment" hidden onChange={(event) => upload(event.target.files?.[0])} aria-label="Document photo" />
+          <input ref={fileRef} type="file" accept="image/*" capture="environment" hidden onChange={(event) => upload(event.target.files?.[0])} aria-label="Camera photo of a document" />
           <button type="button" className="icon-btn icon-btn-line" disabled={busy} onClick={() => fileRef.current?.click()} aria-label="Send a document photo">
             <Camera size={22} aria-hidden="true" />
           </button>

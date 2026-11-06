@@ -206,7 +206,8 @@ def test_reading_a_document_leaves_no_model_in_the_server(client):
     with open(SAMPLES / "aadhaar.jpg", "rb") as image:
         response = client.post(f"/api/households/{household_id}/ocr", files={"file": ("aadhaar.jpg", image, "image/jpeg")})
     assert response.json()["extracted"]["doc_type"] == "aadhaar"
-    assert "rapidocr_onnxruntime" not in sys.modules
+    # The model runs in a process that ends with the read, so the server keeps none of its memory.
+    assert "rapidocr" not in sys.modules and "onnxruntime" not in sys.modules
 
 
 def test_a_failed_read_asks_for_another_photo(client, monkeypatch):
@@ -214,7 +215,7 @@ def test_a_failed_read_asks_for_another_photo(client, monkeypatch):
 
     def crash(data):
         raise RuntimeError("out of memory")
-    monkeypatch.setattr(tools.ocr, "_rapidocr_rows", crash)
+    monkeypatch.setattr(tools.ocr, "_local_rows", crash)
     response = client.post(f"/api/households/{household_id}/ocr", files={"file": ("photo.jpg", b"image", "image/jpeg")})
     assert response.status_code == 200
     assert "another photo" in response.json()["reply"]["en"]
@@ -226,7 +227,7 @@ def test_documents_read_at_the_same_time_all_save(client, monkeypatch):
 
     def read(data, filename):
         together.wait(timeout=20)
-        return {"doc_type": filename.removesuffix(".jpg"), "fields": {"name": "Kamla Devi", "district": "Raebareli"}, "facts": {}, "engine": "rapidocr"}
+        return {"doc_type": filename.removesuffix(".jpg"), "fields": {"name": "Kamla Devi", "district": "Raebareli"}, "facts": {}, "engine": "uniocr"}
     monkeypatch.setattr(tools.ocr, "read_document", read)
 
     def upload(doc):

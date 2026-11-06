@@ -60,17 +60,116 @@ export type AuditEntry = {
   actor: string; outcome: string; at: string;
 };
 
+/**
+ * What went wrong, in terms the page can act on.
+ * gone: the household or application no longer exists, usually because a free server restarted and lost its data.
+ * waking: the host was starting the server and never passed the request on. busy: the server's heavy-work slot was full.
+ */
+export type ErrorKind = "offline" | "waking" | "busy" | "timeout" | "gone" | "rejected" | "server";
+
 export class ApiError extends Error {
-  constructor(public status: number, public body: unknown) {
-    super(`Request failed with status ${status}`);
+  constructor(public status: number, public body: unknown, public kind: ErrorKind) {
+    super(`Request failed: ${kind} (${status})`);
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, init);
-  const body = await response.json().catch(() => null);
-  if (!response.ok) throw new ApiError(response.status, body);
-  return body as T;
+const GET_TIMEOUT_MS = 30_000;
+// Long enough for a document read or a form fill on a small server, plus a queue.
+const POST_TIMEOUT_MS = 170_000;
+// A sleeping free server takes about a minute to start, so retries cover a bit more than that.
+const WAKE_DELAYS_MS = [2_000, 4_000, 8_000, 12_000, 15_000, 15_000, 15_000, 15_000];
+const BUSY_RETRIES = 2;
+
+type Waiting = { reason: "waking" | "busy"; attempt: number } | null;
+const waitingListeners = new Set<(waiting: Waiting) => void>();
+/** Lets a page say "waking the server" while requests are being retried. */
+export function onWaiting(listener: (waiting: Waiting) => void): () => void {
+  waitingListeners.add(listener);
+  return () => waitingListeners.delete(listener);
+}
+const announce = (waiting: Waiting) => waitingListeners.forEach((listener) => listener(waiting));
+
+function detail(body: unknown): string | null {
+  if (body && typeof body === "object") {
+    const record = body as Record<string, unknown>;
+    if (typeof record.en === "string") return record.en;
+    if (typeof record.detail === "string") return record.detail;
+  }
+  return null;
+}
+
+function classify(response: Response, body: unknown): ErrorKind {
+  // Render answers for a sleeping or restarting service itself, before the app ever sees the request.
+  const fromHost = response.headers.has("x-render-routing") || (response.status === 429 && !body);
+  if (response.status === 429 || (fromHost && response.status >= 502)) return "waking";
+  if (response.status === 503 && (body as { code?: string } | null)?.code === "busy") return "busy";
+  if (response.status === 404) return "gone";
+  if (response.status >= 500) return "server";
+  return "rejected";
+}
+
+const sleep = (ms: number) => new Promise((done) => setTimeout(done, ms));
+
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const method = (init.method ?? "GET").toUpperCase();
+  let wakes = 0, busies = 0;
+  for (;;) {
+    if (typeof navigator !== "undefined" && navigator.onLine === false) throw new ApiError(0, null, "offline");
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), method === "GET" ? GET_TIMEOUT_MS : POST_TIMEOUT_MS);
+    let response: Response;
+    try {
+      response = await fetch(path, { ...init, signal: controller.signal });
+    } catch {
+      clearTimeout(timer);
+      if (controller.signal.aborted) {
+        announce(null);
+        throw new ApiError(0, null, "timeout");
+      }
+      // A GET can safely go again. A POST may already have run, so it is never repeated blindly.
+      if (method === "GET" && wakes < WAKE_DELAYS_MS.length) {
+        announce({ reason: "waking", attempt: wakes + 1 });
+        await sleep(WAKE_DELAYS_MS[wakes++]);
+        continue;
+      }
+      announce(null);
+      throw new ApiError(0, null, navigator.onLine === false ? "offline" : "waking");
+    }
+    clearTimeout(timer);
+    const body = await response.json().catch(() => null);
+    if (response.ok) {
+      announce(null);
+      return body as T;
+    }
+    const kind = classify(response, body);
+    if (kind === "waking" && wakes < WAKE_DELAYS_MS.length) {
+      announce({ reason: "waking", attempt: wakes + 1 });
+      await sleep(WAKE_DELAYS_MS[wakes++]);
+      continue;
+    }
+    if (kind === "busy" && busies < BUSY_RETRIES) {
+      busies += 1;
+      announce({ reason: "busy", attempt: busies });
+      await sleep(Math.min(30, Number(response.headers.get("retry-after")) || 15) * 1000);
+      continue;
+    }
+    announce(null);
+    throw new ApiError(response.status, body, kind);
+  }
+}
+
+/** Words for the person, never a status code. */
+export function errorMessage(error: unknown): string {
+  if (!(error instanceof ApiError)) return "Something went wrong. Please try again.";
+  switch (error.kind) {
+    case "offline": return "You seem to be offline. Check your connection and try again.";
+    case "waking": return "The server is still starting up. Please try again in a minute.";
+    case "timeout": return "The server took too long to answer. Please try again.";
+    case "gone": return "This household is no longer on the server. The free demo server clears its data when it restarts.";
+    case "busy": return detail(error.body) ?? "The server is busy. Please try again in a minute.";
+    case "rejected": return detail(error.body) ?? "That did not work. Please check and try again.";
+    default: return detail(error.body) ?? "Something went wrong on the server. Please try again.";
+  }
 }
 
 function post<T>(path: string, data?: unknown): Promise<T> {
@@ -119,6 +218,9 @@ export const api = {
     return request<TurnResult & { extracted: { doc_type: string | null; fields: Record<string, string>; engine: string } }>(
       `/api/households/${id}/ocr`, { method: "POST", body: form });
   },
+  ocrText: (id: string, rows: string[]) => post<(TurnResult & { extracted: { doc_type: string | null; fields: Record<string, string>; engine: string } }) | { needs_image: true }>(
+    `/api/households/${id}/ocr/text`, { rows }),
+  health: () => request<{ status: string }>("/api/health"),
   confirm: (applicationId: string) => post<TurnResult>(`/api/applications/${applicationId}/confirm`),
   submitWithoutConfirmation: (applicationId: string) => post<unknown>(`/api/applications/${applicationId}/submit`),
   advance: (days: number) => post<{ offset_days: number }>("/api/demo/advance", { days }),

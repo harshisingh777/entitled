@@ -24,12 +24,24 @@ _load_dotenv()
 DATA_DIR = Path(os.environ.get("ENTITLED_DATA_DIR", BACKEND / "data"))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{(DATA_DIR / 'entitled.db').as_posix()}")
+
+
+def database_url(url: str) -> str:
+    """Hosts such as Neon and Render hand out postgres:// or postgresql:// URLs. The installed driver is psycopg 3."""
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix):]
+    return url
+
+
+DATABASE_URL = database_url(os.environ.get("DATABASE_URL", "").strip() or f"sqlite:///{(DATA_DIR / 'entitled.db').as_posix()}")
 PORT = int(os.environ.get("BACKEND_PORT", "8000"))
 INTERNAL_BASE_URL = os.environ.get("INTERNAL_BASE_URL", f"http://127.0.0.1:{PORT}")
 POLL_SECONDS = int(os.environ.get("STATUS_POLL_SECONDS", "60"))
 CONFIRMATION_TTL_SECONDS = 600
 OCR_LOW_MEMORY = os.environ.get("OCR_LOW_MEMORY", "") == "1"
+# UniOCR's model bundle. The frontend serves the same file to phones, so there is one copy in the repo.
+UNIOCR_BUNDLE = Path(os.environ.get("UNIOCR_BUNDLE", ROOT / "frontend" / "public" / "models" / "uniocr_mobile.bin"))
 
 SARVAM_API_KEY = os.environ.get("SARVAM_API_KEY", "")
 SARVAM_BASE_URL = os.environ.get("SARVAM_BASE_URL", "https://api.sarvam.ai")

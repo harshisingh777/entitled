@@ -1,6 +1,7 @@
 """Drives the running app in a real browser: the whole journey by tapping, then every screen at every size.
 
-Run with both servers up:  python scripts/ui_check.py [--shots DIR]
+Run with both servers up:  python scripts/ui_check.py [--shots DIR] [--base URL]
+Against the live site:     python scripts/ui_check.py --base https://entitled-pi.vercel.app
 """
 import argparse
 import sys
@@ -10,6 +11,8 @@ from playwright.sync_api import Page, expect, sync_playwright
 
 BASE = "http://127.0.0.1:3000"
 SAMPLES = Path(__file__).resolve().parents[1] / "app" / "static" / "samples"
+HINDI_CARD = Path(__file__).resolve().parents[1] / "tests" / "data" / "ration_card_hi.jpg"
+sent_to_server: list[str] = []
 SIZES = {
     "phone-small": (320, 568), "phone": (390, 844), "phone-landscape": (844, 390),
     "tablet": (768, 1024), "tablet-landscape": (1024, 768), "laptop": (1366, 768), "desktop": (1920, 1080),
@@ -59,7 +62,7 @@ def tap_text(page: Page, text: str) -> None:
 
 
 def wait_idle(page: Page) -> None:
-    page.wait_for_function("!document.querySelector('.bubble-wait')", timeout=60000)
+    page.wait_for_function("!document.querySelector('.bubble-wait')", timeout=180000)
     page.wait_for_timeout(150)
 
 
@@ -75,6 +78,8 @@ def journey(page: Page, shots: Path | None) -> str:
         if shots:
             page.screenshot(path=str(shots / f"journey-{name}.png"))
 
+    # Every document request is kept, to prove what left the phone.
+    page.on("request", lambda r: sent_to_server.append(f"{r.url} {r.post_data or ''}") if "/ocr" in r.url else None)
     page.goto(BASE)
     page.get_by_role("button", name="Walk through Kamla Devi's case").click()
     page.wait_for_url("**/h/**")
@@ -108,10 +113,15 @@ def journey(page: Page, shots: Path | None) -> str:
     bottom_tab(page, "Documents")
     for sample in ("Ration card", "Aadhaar", "Passbook"):
         page.locator(".sample-row").get_by_role("button", name=sample, exact=True).click()
-        page.wait_for_function("!document.querySelector('.sample-row button[disabled]')", timeout=60000)
+        page.wait_for_function("!document.querySelector('.sample-row button[disabled]')", timeout=240000)
     expect(page.get_by_test_id("doc-aadhaar")).to_be_visible()
     expect(page.locator(".extracted")).to_contain_text("DEMO0001234")
     expect(page.locator(".extracted")).to_contain_text("XXXX0412")
+    expect(page.locator(".device-note")).to_contain_text("never left it")
+    if any("/ocr " in item or item.split(" ")[0].endswith("/ocr") for item in sent_to_server):
+        problems.append("journey: a demo photo went to the server instead of being read on the device")
+    if any("9999" in item and "8888" in item for item in sent_to_server):
+        problems.append("journey: the full Aadhaar number left the device")
     shot("05-documents")
 
     bottom_tab(page, "Chat")
@@ -167,6 +177,29 @@ def journey(page: Page, shots: Path | None) -> str:
     return household
 
 
+def hindi_fallback(page: Page) -> None:
+    """A Hindi card defeats the phone's Latin-only reader, so the photo goes to the server's Hindi reader instead."""
+    page.goto(BASE)
+    page.get_by_role("button", name="Start talking").click()
+    page.wait_for_url("**/h/**")
+    bottom_tab(page, "Documents")
+    page.get_by_label("Document photo or PDF").set_input_files(str(HINDI_CARD))
+    page.wait_for_function("!document.querySelector('.upload-box button[disabled]')", timeout=240000)
+    expect(page.locator(".extracted")).to_contain_text("Ram Prasad")
+    expect(page.locator(".extracted")).to_contain_text("Sunita Devi")
+    check_layout(page, "hindi-document")
+
+
+def recovery(page: Page) -> None:
+    """A household lost in a server restart gets an explanation and a way back, not 'the server did not respond'."""
+    page.goto(f"{BASE}/h/000000000000?demo=kamla")
+    expect(page.get_by_role("heading", name="This conversation was cleared")).to_be_visible(timeout=60000)
+    check_layout(page, "recovery")
+    page.get_by_role("button", name="Start Kamla Devi's case again").click()
+    page.wait_for_url("**/h/**?demo=kamla")
+    expect(page.locator(".bubble-agent").first).to_contain_text("How old are you")
+
+
 def sweep(browser, household: str, shots: Path | None) -> None:
     for name, (width, height) in SIZES.items():
         context = browser.new_context(viewport={"width": width, "height": height}, has_touch=width < 768)
@@ -204,9 +237,12 @@ def sweep(browser, household: str, shots: Path | None) -> None:
 
 
 def main() -> int:
+    global BASE
     parser = argparse.ArgumentParser()
     parser.add_argument("--shots", type=Path)
+    parser.add_argument("--base", default=BASE)
     args = parser.parse_args()
+    BASE = args.base.rstrip("/")
     if args.shots:
         args.shots.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:
@@ -216,8 +252,16 @@ def main() -> int:
         page.on("console", lambda m: console_errors.append(f"journey: {m.text}") if m.type == "error" and "403" not in m.text else None)
         page.on("pageerror", lambda e: console_errors.append(f"journey: {e}"))
         household = journey(page, args.shots)
-        context.close()
         print("journey passed on a phone-sized screen, household", household)
+        context.close()
+        # Its own context: opening a lost household logs a 404 on purpose, which is not a console error to report.
+        context = browser.new_context(viewport={"width": 390, "height": 844}, has_touch=True)
+        page = context.new_page()
+        recovery(page)
+        print("recovery screen passed")
+        hindi_fallback(page)
+        print("Hindi document read through the server fallback")
+        context.close()
         sweep(browser, household, args.shots)
         browser.close()
     for item in problems + console_errors:

@@ -13,7 +13,7 @@ The backend (FastAPI, Chromium, OCR) and the frontend (Next.js) run as two conta
 
 ## Environment
 
-**No value is required.** With nothing set, it uses browser speech, on-device OCR, pattern matching and simulated SMS, which is the tested setup.
+**No value is required.** With nothing set, it uses browser speech (or Whisper on the device where the browser has none), on-device OCR, pattern matching and simulated SMS, which is the tested setup.
 
 To add keys, copy `.env.example` to `.env`. It is gitignored and is never copied into an image. The optional keys are explained in that file. Their integrations have not been run against the live services, so run the whole journey before relying on one.
 

@@ -61,6 +61,17 @@ Two things learned while fitting UniOCR to identity documents:
 
 Details read from a Hindi document are written out in Latin letters (सुनीता देवी becomes Sunita Devi) because the site and the forms are in English. The spelling is a reading aid, and every field can be corrected under Profile.
 
+## Speech on any browser
+
+Without a Sarvam key, speech is turned into text by the browser's own recognition where that works (Chrome, Edge, Safari). Brave ships the same API with no service behind it, so it fails every time with a `network` error, and Firefox has no such API. There, and in any browser whose speech service fails, the words are heard **on the device** by Whisper tiny.en (int8, from [onnx-community/whisper-tiny.en](https://huggingface.co/onnx-community/whisper-tiny.en)), running in the same ONNX Runtime Web as UniOCR. The recording never leaves the device. Only the words are sent, as if they had been typed.
+
+- The first use downloads 42 MB, while the person is still speaking, and keeps it for later visits. Each file is checked against its sha256 before it runs.
+- A recording ends after a 1.6 s pause, after 20 s, or when the person taps stop.
+- A short prompt of UP district names and scheme words steers Whisper's spelling, so Raebareli is not heard as "Raya Valley". [`scripts/whisper_prompt.py`](backend/scripts/whisper_prompt.py) regenerates it.
+- If a server speech service is configured and fails, the same recording is read on the device instead.
+
+Measured in desktop Chromium on one thread, on 16 sentences from the demo spoken by Windows' two Indian-English voices: about 2 s per sentence and a word error rate of 7%. Most errors don't change the meaning ("40,000" for "40 thousand", "Kamala" for Kamla). Tested in Brave, Firefox, and Chromium with a failing speech service. It has not been tested with real speakers or on a low-end phone, where it will be slower.
+
 ## Measured results
 
 Run `python scripts/eval.py` from `backend/` to reproduce these.
@@ -79,11 +90,11 @@ The labels were written by hand from the rule definitions, so they catch encodin
 
 ```bash
 cd backend
-python -m pytest tests            # 114 tests, including a real browser and real OCR run
+python -m pytest tests            # 116 tests, including a real browser and real OCR run
 python scripts/ui_check.py        # with both servers running, or --base https://your-site
 ```
 
-`ui_check.py` drives the whole journey by tapping on a phone-sized screen, then checks every screen at 320, 390, 768, 844, 1024, 1366 and 1920 px for sideways scrolling, clipped elements, small tap targets, console errors and any Hindi text on screen. It also checks that the demo documents are read on the device without the full Aadhaar number ever being sent, that a Hindi card falls back to the server and is read, and that a household lost in a server restart shows a way back.
+`ui_check.py` drives the whole journey by tapping on a phone-sized screen, then checks every screen at 320, 390, 768, 844, 1024, 1366 and 1920 px for sideways scrolling, clipped elements, small tap targets, console errors and any Hindi text on screen. It also checks that the demo documents are read on the device without the full Aadhaar number ever being sent, that a Hindi card falls back to the server and is read, and that a household lost in a server restart shows a way back. For voice, it plays [a recorded sentence](backend/tests/data/speech_en_in.wav) into the microphone, once as Brave and once with a browser speech service that fails, and checks the words reach the agent.
 
 Set `TEST_DATABASE_URL` to run the tests against PostgreSQL instead of SQLite.
 
@@ -113,7 +124,8 @@ Next.js PWA  ──  /api, /portal proxied to FastAPI
 
 | Capability | With a key | Without a key |
 |---|---|---|
-| Speech to text, text to speech | Sarvam Saaras and Bulbul, then Bhashini | The browser's own speech |
+| Speech to text | Sarvam Saaras, then Bhashini, then Whisper on the device | The browser's own recognition, or Whisper on the device where that does not work |
+| Text to speech | Sarvam Bulbul, then Bhashini | The browser's own voice |
 | Document reading | Sarvam Vision on the server | UniOCR, on the phone or on the server |
 | Understanding speech | Pattern extractor, then an LLM for what it misses | Pattern extractor alone |
 | SMS reminders | Twilio | Shown in the app, labelled as simulated |

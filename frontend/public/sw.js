@@ -1,7 +1,8 @@
 // Keeps the app shell available on patchy networks. API responses hold family data and are never cached.
 const CACHE = "entitled-v2";
-// The on-device reader keeps its model in its own cache (see public/ocr/worker.js). A 27 MB download is never thrown away here.
-const KEEP = (key) => key === CACHE || key.startsWith("entitled-ocr-");
+// The on-device document and speech readers keep their models in their own caches (public/ocr/worker.js and
+// public/speech/worker.js). A download of 40 MB is never thrown away here.
+const KEEP = (key) => key === CACHE || key.startsWith("entitled-ocr-") || key.startsWith("entitled-speech-");
 const SHELL = ["/", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {

@@ -26,10 +26,12 @@ _THOUSAND = r"लाख|lakh|lac|हजार|hazar|hajar|thousand"
 _NEG = r"(?:नहीं|नही|ना\b|मत\b|nahi|nahin|nhi|nahee|\bno\b|\bnot\b|don'?t|doesn'?t|without|बिना)"
 _GIRL = r"(?:पोतियाँ|पोती|बेटियाँ|बेटियां|बेटी|लड़कियाँ|लड़की|नातिन|बिटिया|poti|betiyan|beti|ladki|natin|bitiya|granddaughters?|daughters?|girls?)"
 _OTHER_KIN = r"(?:बेटा|बेटे|पोता|पति|बहू|bete|beta|pota|pati|\bson\b|husband)"
-_CLAUSE_SPLIT = re.compile(r"[,।;!?\n]|\.(?!\d)|\s(?:और|aur|and)\s")
+# A comma between digits groups a number (40,000 or 1,20,000), and "Rs." is a currency, so neither ends a clause.
+_CLAUSE_SPLIT = re.compile(r"(?<!\d),|,(?!\d)|[।;!?\n]|(?<!\brs)\.(?!\d)|\s(?:और|aur|and)\s")
 
 _UP_DISTRICTS = {
-    "रायबरेली": "Raebareli", "raebareli": "Raebareli", "rae bareli": "Raebareli", "लखनऊ": "Lucknow", "lucknow": "Lucknow",
+    "रायबरेली": "Raebareli", "raebareli": "Raebareli", "rae bareli": "Raebareli", "raibareli": "Raebareli", "rai bareli": "Raebareli",
+    "raybareli": "Raebareli", "ray bareli": "Raebareli", "लखनऊ": "Lucknow", "lucknow": "Lucknow",
     "कानपुर": "Kanpur", "kanpur": "Kanpur", "वाराणसी": "Varanasi", "varanasi": "Varanasi", "बनारस": "Varanasi", "banaras": "Varanasi",
     "प्रयागराज": "Prayagraj", "prayagraj": "Prayagraj", "इलाहाबाद": "Prayagraj", "allahabad": "Prayagraj", "गोरखपुर": "Gorakhpur", "gorakhpur": "Gorakhpur",
     "आगरा": "Agra", "agra": "Agra", "मेरठ": "Meerut", "meerut": "Meerut", "बरेली": "Bareilly", "bareilly": "Bareilly", "अयोध्या": "Ayodhya", "ayodhya": "Ayodhya",

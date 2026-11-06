@@ -134,3 +134,18 @@ def test_english_send_confirmation():
     assert not confirms_send("Yes")
     assert not confirms_send("Do not send")
     assert refuses_send("Do not send")
+
+
+def test_numbers_written_with_commas_stay_whole():
+    # Speech engines write "40 thousand" as "40,000", and Indian grouping as "1,20,000".
+    assert values("Our yearly income is 40,000 rupees.")["annual_income"] == 40000
+    assert values("Income is 1,20,000")["annual_income"] == 120000
+    assert values("My income is Rs. 40000")["annual_income"] == 40000
+    assert values("I am 58, my income is 3,000 a month")["annual_income"] == 36000
+    facts = values("My income is 40,000. I have a BPL card")
+    assert facts["annual_income"] == 40000 and facts["bpl_card"] is True
+
+
+def test_raebareli_in_its_common_spellings():
+    for said in ("Raebareli", "Rae Bareli", "Rai Bareli", "Raibareli", "Raybareli"):
+        assert values(f"I live in {said}")["district"] == "Raebareli", said

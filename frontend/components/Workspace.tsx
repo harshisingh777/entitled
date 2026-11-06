@@ -63,15 +63,19 @@ export default function Workspace({ id }: { id: string }) {
   const voiceError = useCallback((code: string) => {
     const messages: Record<string, string> = {
       "not-allowed": "Microphone permission was denied. Allow it in the browser, or type instead.",
-      "no-speech": "I did not hear anything. Please try again.",
+      "audio-capture": "No microphone was found. Connect one, or type instead.",
+      "no-speech": "I did not hear anything. Tap the mic and try again.",
       unsupported: "This browser has no speech support. Please type instead.",
+      "device-failed": "The speech reader on this device could not start. Please type instead, or try Chrome.",
+      "stt-failed": "The speech service did not answer. Please type instead.",
+      network: "This browser's speech service could not be reached. Check the connection, or type instead.",
     };
-    setNotice(messages[code] ?? "Speech failed. Please type instead.");
+    setNotice(messages[code] ?? `Speech did not work (${code}). Please type instead.`);
   }, []);
 
   const sendRef = useRef<(text: string) => void>(() => undefined);
   const onSpoken = useCallback((text: string) => sendRef.current(text), []);
-  const voice = useVoice(config, onSpoken, voiceError);
+  const voice = useVoice(config, onSpoken, voiceError, setNotice);
 
   const speakReply = useCallback((reply: Text2) => {
     if (autoSpeak) void voice.speak(reply.en);
@@ -212,7 +216,7 @@ export default function Workspace({ id }: { id: string }) {
         </div>
         <p className="meter-note">
           {counts.undecided
-            ? `${decided} of ${state.scheme_count} schemes decided · ${state.household.questions_asked} questions`
+            ? `${decided} of ${state.scheme_count} schemes decided · ${state.household.questions_asked} ${state.household.questions_asked === 1 ? "question" : "questions"}`
             : `All ${state.scheme_count} schemes checked`}
         </p>
       </section>

@@ -12,6 +12,8 @@ from playwright.sync_api import Page, expect, sync_playwright
 BASE = "http://127.0.0.1:3000"
 SAMPLES = Path(__file__).resolve().parents[1] / "app" / "static" / "samples"
 HINDI_CARD = Path(__file__).resolve().parents[1] / "tests" / "data" / "ration_card_hi.jpg"
+# Windows' en-IN "Heera" voice saying "I am a widow and I have a BPL card.", with silence either side.
+SPEECH = Path(__file__).resolve().parents[1] / "tests" / "data" / "speech_en_in.wav"
 sent_to_server: list[str] = []
 SIZES = {
     "phone-small": (320, 568), "phone": (390, 844), "phone-landscape": (844, 390),
@@ -200,6 +202,34 @@ def recovery(page: Page) -> None:
     expect(page.locator(".bubble-agent").first).to_contain_text("How old are you")
 
 
+BRAVE = "Object.defineProperty(navigator, 'brave', { value: { isBrave: () => Promise.resolve(true) } });"
+# A browser that has the speech API but no service behind it, as Chromium builds without Google's keys do.
+BROKEN_SPEECH_SERVICE = """
+window.webkitSpeechRecognition = window.SpeechRecognition = class {
+  start() { setTimeout(() => { this.onerror?.({ error: 'network' }); this.onend?.(); }, 50); }
+  stop() {} abort() {}
+};"""
+
+
+def speech(browser, setup: str, where: str) -> None:
+    """The microphone hears speech_en_in.wav ("I am a widow and I have a BPL card."), and Whisper reads it on the device."""
+    context = browser.new_context(viewport={"width": 390, "height": 844}, has_touch=True, permissions=["microphone"])
+    context.add_init_script(setup)
+    page = context.new_page()
+    page.on("console", lambda m: console_errors.append(f"{where}: {m.text}") if m.type == "error" else None)
+    page.on("pageerror", lambda e: console_errors.append(f"{where}: {e}"))
+    page.goto(BASE)
+    page.get_by_role("button", name="Start talking").click()
+    page.wait_for_url("**/h/**")
+    page.get_by_role("button", name="Speak").click()
+    said = page.locator(".bubble-user").last
+    expect(said).to_contain_text("BPL card", timeout=240000)
+    expect(said).to_contain_text("widow")
+    wait_idle(page)
+    check_layout(page, where)
+    context.close()
+
+
 def sweep(browser, household: str, shots: Path | None) -> None:
     for name, (width, height) in SIZES.items():
         context = browser.new_context(viewport={"width": width, "height": height}, has_touch=width < 768)
@@ -264,6 +294,14 @@ def main() -> int:
         context.close()
         sweep(browser, household, args.shots)
         browser.close()
+        listening = p.chromium.launch(headless=True, args=[
+            "--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream",
+            f"--use-file-for-fake-audio-capture={SPEECH}%noloop"])
+        speech(listening, BRAVE, "speech-brave")
+        print("speech read on the device in Brave")
+        speech(listening, BROKEN_SPEECH_SERVICE, "speech-fallback")
+        print("speech switched to the device when the browser's speech service failed")
+        listening.close()
     for item in problems + console_errors:
         print("PROBLEM", item)
     print(f"{len(SIZES)} sizes checked, {len(problems)} layout problems, {len(console_errors)} console errors")

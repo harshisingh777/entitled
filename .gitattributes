@@ -1,0 +1,2 @@
+# Model files are checked against sha256 sums, so line endings must never be converted.
+frontend/public/models/** binary
